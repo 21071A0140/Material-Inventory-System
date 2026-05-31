@@ -1,0 +1,12 @@
+{
+  "liveServer.settings.ignoreFiles": [
+    "projects/**",
+    "uploads/**",
+    "**/*.json",
+    "**/*.xlsx",
+    "**/*.pdf",
+    "**/*.pyc",
+    "__pycache__/**",
+    "*.xer"
+  ]
+}

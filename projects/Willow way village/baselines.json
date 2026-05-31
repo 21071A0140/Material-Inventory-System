@@ -1,0 +1,413 @@
+{
+  "baselines": [
+    {
+      "id": 1,
+      "name": "BT Estimate Baseline",
+      "created": "2026-05-18",
+      "locked": true,
+      "activities": [
+        {
+          "id": "A0001",
+          "name": "Building VA (North) - Layout - Labor",
+          "start": "2026-05-18",
+          "finish": "2026-05-23",
+          "duration": 5,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0002",
+          "name": "Building VA (North) - Framing - Labor",
+          "start": "2026-05-23",
+          "finish": "2026-06-19",
+          "duration": 23,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0003",
+          "name": "Building VA (North) - Sheathing - Labor",
+          "start": "2026-06-19",
+          "finish": "2026-06-25",
+          "duration": 5,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0004",
+          "name": "Building VA (North) - Shear Wall - Labor",
+          "start": "2026-06-25",
+          "finish": "2026-06-26",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0005",
+          "name": "Building VA (North) - Floor Truss - Labor",
+          "start": "2026-06-26",
+          "finish": "2026-07-11",
+          "duration": 13,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0006",
+          "name": "Building VA (North) - Roof Truss - Labor",
+          "start": "2026-07-11",
+          "finish": "2026-07-29",
+          "duration": 15,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0007",
+          "name": "Building VA (North) - Hardware - Labor",
+          "start": "2026-07-29",
+          "finish": "2026-08-04",
+          "duration": 5,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0008",
+          "name": "Building VA (North) - House Wrap - Labor",
+          "start": "2026-08-04",
+          "finish": "2026-08-06",
+          "duration": 2,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0009",
+          "name": "Building VA (North) - Stair Labor",
+          "start": "2026-08-06",
+          "finish": "2026-08-07",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0010",
+          "name": "Building VA (North) - Punchout - Labor",
+          "start": "2026-08-07",
+          "finish": "2026-08-13",
+          "duration": 5,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0011",
+          "name": "Building VA (South) - Layout - Labor",
+          "start": "2026-05-18",
+          "finish": "2026-05-23",
+          "duration": 5,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0012",
+          "name": "Building VA (South) - Framing - Labor",
+          "start": "2026-05-23",
+          "finish": "2026-06-19",
+          "duration": 23,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0013",
+          "name": "Building VA (South) - Sheathing - Labor",
+          "start": "2026-06-19",
+          "finish": "2026-06-25",
+          "duration": 5,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0014",
+          "name": "Building VA (South) - Shear Wall - Labor",
+          "start": "2026-06-25",
+          "finish": "2026-06-27",
+          "duration": 2,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0015",
+          "name": "Building VA (South) - Floor Truss - Labor",
+          "start": "2026-06-27",
+          "finish": "2026-07-13",
+          "duration": 13,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0016",
+          "name": "Building VA (South) - Roof Truss - Labor",
+          "start": "2026-07-13",
+          "finish": "2026-07-30",
+          "duration": 15,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0017",
+          "name": "Building VA (South) - Hardware - Labor",
+          "start": "2026-07-30",
+          "finish": "2026-08-05",
+          "duration": 5,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0018",
+          "name": "Building VA (South) - House Wrap - Labor",
+          "start": "2026-08-05",
+          "finish": "2026-08-07",
+          "duration": 2,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0019",
+          "name": "Building VA (South) - Stair Labor",
+          "start": "2026-08-07",
+          "finish": "2026-08-08",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0020",
+          "name": "Building VA (South) - Punchout - Labor",
+          "start": "2026-08-08",
+          "finish": "2026-08-14",
+          "duration": 5,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0021",
+          "name": "Club house VB (North) - Layout - Labor",
+          "start": "2026-05-18",
+          "finish": "2026-05-19",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0022",
+          "name": "Club house VB (North) - Framing - Labor",
+          "start": "2026-05-19",
+          "finish": "2026-05-23",
+          "duration": 4,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0023",
+          "name": "Club house VB (North) - Sheathing - Labor",
+          "start": "2026-05-23",
+          "finish": "2026-05-25",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0024",
+          "name": "Club house VB (North) - Shear Wall - Labor",
+          "start": "2026-05-25",
+          "finish": "2026-05-26",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0025",
+          "name": "Club house VB (North) - Roof Truss - Labor",
+          "start": "2026-05-26",
+          "finish": "2026-06-04",
+          "duration": 8,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0026",
+          "name": "Club house VB (North) - Hardware - Labor",
+          "start": "2026-06-04",
+          "finish": "2026-06-05",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0027",
+          "name": "Club house VB (North) - House Wrap - Labor",
+          "start": "2026-06-05",
+          "finish": "2026-06-06",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0028",
+          "name": "Club house VB (North) - Punchout - Labor",
+          "start": "2026-06-06",
+          "finish": "2026-06-08",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0029",
+          "name": "Mail Kiosk (North) - Layout - Labor",
+          "start": "2026-05-18",
+          "finish": "2026-05-19",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0030",
+          "name": "Mail Kiosk (North) - Framing - Labor",
+          "start": "2026-05-19",
+          "finish": "2026-05-20",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0031",
+          "name": "Mail Kiosk (North) - Sheathing - Labor",
+          "start": "2026-05-20",
+          "finish": "2026-05-21",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0032",
+          "name": "Mail Kiosk (North) - Roof Truss - Labor",
+          "start": "2026-05-21",
+          "finish": "2026-05-22",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0033",
+          "name": "Mail Kiosk (North) - Hardware - Labor",
+          "start": "2026-05-22",
+          "finish": "2026-05-23",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0034",
+          "name": "Mail Kiosk (North) - Punchout - Labor",
+          "start": "2026-05-23",
+          "finish": "2026-05-25",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0035",
+          "name": "Mail Kiosk (South) - Layout - Labor",
+          "start": "2026-05-18",
+          "finish": "2026-05-19",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0036",
+          "name": "Mail Kiosk (South) - Framing - Labor",
+          "start": "2026-05-19",
+          "finish": "2026-05-20",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0037",
+          "name": "Mail Kiosk (South) - Sheathing - Labor",
+          "start": "2026-05-20",
+          "finish": "2026-05-21",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0038",
+          "name": "Mail Kiosk (South) - Roof Truss - Labor",
+          "start": "2026-05-21",
+          "finish": "2026-05-22",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0039",
+          "name": "Mail Kiosk (South) - Hardware - Labor",
+          "start": "2026-05-22",
+          "finish": "2026-05-23",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0040",
+          "name": "Mail Kiosk (South) - Punchout - Labor",
+          "start": "2026-05-23",
+          "finish": "2026-05-25",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0041",
+          "name": "Trash Enclosure (North) - Layout - Labor",
+          "start": "2026-05-18",
+          "finish": "2026-05-19",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0042",
+          "name": "Trash Enclosure (North) - Framing - Labor",
+          "start": "2026-05-19",
+          "finish": "2026-05-20",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0043",
+          "name": "Trash Enclosure (North) - Sheathing - Labor",
+          "start": "2026-05-20",
+          "finish": "2026-05-21",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0044",
+          "name": "Trash Enclosure (North) - Hardware - Labor",
+          "start": "2026-05-21",
+          "finish": "2026-05-22",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0045",
+          "name": "Trash Enclosure (North) - Punchout - Labor",
+          "start": "2026-05-22",
+          "finish": "2026-05-23",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0046",
+          "name": "Trash Enclosure (South) - Layout - Labor",
+          "start": "2026-05-18",
+          "finish": "2026-05-19",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0047",
+          "name": "Trash Enclosure (South) - Framing - Labor",
+          "start": "2026-05-19",
+          "finish": "2026-05-20",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0048",
+          "name": "Trash Enclosure (South) - Sheathing - Labor",
+          "start": "2026-05-20",
+          "finish": "2026-05-21",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0049",
+          "name": "Trash Enclosure (South) - Hardware - Labor",
+          "start": "2026-05-21",
+          "finish": "2026-05-22",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0050",
+          "name": "Trash Enclosure (South) - Punchout - Labor",
+          "start": "2026-05-22",
+          "finish": "2026-05-23",
+          "duration": 1,
+          "pct_complete": 0
+        }
+      ]
+    }
+  ],
+  "next_bl_id": 3
+}

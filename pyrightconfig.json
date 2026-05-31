@@ -1,0 +1,16 @@
+{
+  "include": ["."],
+  "extraPaths": ["."],
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": "none",
+  "reportMissingModuleSource": "none",
+  "reportAttributeAccessIssue": "none",
+  "reportOptionalMemberAccess": "none",
+  "reportArgumentType": "none",
+  "reportAssignmentType": "none",
+  "reportCallIssue": "none",
+  "reportOperatorIssue": "none",
+  "reportReturnType": "none",
+  "reportIndexIssue": "none"
+}
