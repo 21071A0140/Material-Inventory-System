@@ -18,7 +18,7 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 import anthropic
 
@@ -40,6 +40,21 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 
 app = FastAPI(title="Material Inventory Automation v5")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+@app.get("/", response_class=HTMLResponse)
+def home():
+    return """
+    <html>
+    <head><title>Material Inventory Automation System</title></head>
+    <body style="font-family:Arial;text-align:center;padding:50px">
+        <h1>Material Inventory Automation System</h1>
+        <p>Application is running successfully.</p>
+        <p><a href="/docs">Open API Docs</a></p>
+        <p><a href="/redoc">Open ReDoc</a></p>
+    </body>
+    </html>
+    """
+
 
 _claude = None
 def get_claude():
