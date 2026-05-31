@@ -41,19 +41,9 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 app = FastAPI(title="Material Inventory Automation v5")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 def home():
-    return """
-    <html>
-    <head><title>Material Inventory Automation System</title></head>
-    <body style="font-family:Arial;text-align:center;padding:50px">
-        <h1>Material Inventory Automation System</h1>
-        <p>Application is running successfully.</p>
-        <p><a href="/docs">Open API Docs</a></p>
-        <p><a href="/redoc">Open ReDoc</a></p>
-    </body>
-    </html>
-    """
+    return FileResponse(BASE_DIR / "index.html")
 
 
 _claude = None
