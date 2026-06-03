@@ -10,7 +10,6 @@ from datetime import datetime
 
 # ── API Key ───────────────────────────────────────────────────────────────────
 import os
-
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
 import pdfplumber
@@ -21,7 +20,6 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 import anthropic
-
 # Schedule / BT estimate dependencies
 try:
     import pandas as pd
@@ -30,7 +28,6 @@ try:
 except ImportError:
     PANDAS_OK = False
     pd = None
-
 BASE_DIR   = Path(__file__).parent
 PROJECTS   = BASE_DIR / "projects"
 import tempfile as _tmp_s
