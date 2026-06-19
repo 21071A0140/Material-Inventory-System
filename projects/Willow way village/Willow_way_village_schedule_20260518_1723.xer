@@ -1,0 +1,120 @@
+ERMHDR	19.12	2026-05-18	Project		MatInv	matinv-export	dbxDatabaseNoName	Project Management	USD
+%T	PROJECT
+%F	proj_id	fy_start_month_num	rsrc_self_add_flag	allow_complete_flag	rsrc_multi_assign_flag	checkout_flag	project_flag	step_complete_flag	cost_qty_recalc_flag	batch_sum_flag	name_sep_char	def_complete_pct_type	proj_short_name	acct_id	orig_proj_id	source_proj_id	base_type_id	clndr_id	sum_base_proj_id	task_code_base	task_code_step	priority_num	wbs_max_sum_level	strgy_priority_num	last_checksum	critical_drtn_hr_cnt	def_cost_per_qty	last_recalc_date	plan_start_date	plan_end_date	scd_end_date	add_date	last_tasksum_date	fcst_start_date	def_duration_type	task_code_prefix	guid	def_qty_per_hr	add_by_name	wbs_max_sum_level	critical_path_type	task_code_prefix_flag	def_task_type	act_this_per_link_flag	def_rollup_dates_flag	cost_qty_recalc_flag	plan_max_check_in_finish_flag	def_rate_type	add_act_remain_flag	act_pct_link_flag
+%R	1000	1	N	Y	N	N	N	N	N	N	.	CP_Drtn	Willow_way_village					1001		1	1	10	0	100	0	0	2026-05-18 08:00	2026-05-18 08:00	2026-08-14 08:00	2026-08-14 08:00	2026-05-18 08:00		2026-05-18 08:00	CL_TASK_DEP	A	{20260518172323-1000}	0	2869049358210536039	10	CT_TotFloat	N	TT_Task	N	Y	N	N	COST_PER_QTY	N	N
+%E
+%T	CALENDAR
+%F	clndr_id	default_flag	clndr_name	proj_id	base_clndr_id	last_chng_date	clndr_type	day_hr_cnt	week_hr_cnt	month_hr_cnt	year_hr_cnt	rsrc_private	clndr_data
+%R	1001	Y	Standard MatInv (Mon-Sat 8h)			2026-05-18 08:00	CA_Base	8	48	208	2496	N	(0||CalendarData())
+%E
+%T	PROJWBS
+%F	wbs_id	proj_id	obs_id	seq_num	est_wt	proj_node_flag	sum_data_flag	status_code	wbs_short_name	wbs_name	phase_id	parent_wbs_id	ev_user_pct	ev_etc_user_value	orig_cost	indep_remain_total_cost	ann_dscnt_rate_pct	dscnt_period_type	indep_remain_work_qty	ann_dscnt_amt	calc_summary_dates_flag	guid	tmpl_guid
+%R	1003	1000	1002	1	1.0	Y	N	WBS_Open	Willow_way_village	Willow way village			0.06	0	0	0	0	DP_Annual	0	0	N	{20260518172323-WBS-ROOT}	
+%R	2001	1000	1002	2	1.0	N	N	WBS_Open	Building VA (North)	Building VA (North)		1003	0.06	0	0	0	0	DP_Annual	0	0	N	{20260518172323-WBS-0}	
+%R	2002	1000	1002	3	1.0	N	N	WBS_Open	Building VA (South)	Building VA (South)		1003	0.06	0	0	0	0	DP_Annual	0	0	N	{20260518172323-WBS-1}	
+%R	2003	1000	1002	4	1.0	N	N	WBS_Open	Club house VB (North	Club house VB (North)		1003	0.06	0	0	0	0	DP_Annual	0	0	N	{20260518172323-WBS-2}	
+%R	2004	1000	1002	5	1.0	N	N	WBS_Open	Mail Kiosk (North)	Mail Kiosk (North)		1003	0.06	0	0	0	0	DP_Annual	0	0	N	{20260518172323-WBS-3}	
+%R	2005	1000	1002	6	1.0	N	N	WBS_Open	Mail Kiosk (South)	Mail Kiosk (South)		1003	0.06	0	0	0	0	DP_Annual	0	0	N	{20260518172323-WBS-4}	
+%R	2006	1000	1002	7	1.0	N	N	WBS_Open	Trash Enclosure (Nor	Trash Enclosure (North)		1003	0.06	0	0	0	0	DP_Annual	0	0	N	{20260518172323-WBS-5}	
+%R	2007	1000	1002	8	1.0	N	N	WBS_Open	Trash Enclosure (Sou	Trash Enclosure (South)		1003	0.06	0	0	0	0	DP_Annual	0	0	N	{20260518172323-WBS-6}	
+%E
+%T	TASK
+%F	task_id	proj_id	wbs_id	clndr_id	phys_complete_pct	rev_fdbk_flag	est_wt	lock_plan_flag	auto_compute_act_flag	complete_pct_type	task_type	duration_type	status_code	task_code	task_name	rsrc_id	total_float_hr_cnt	free_float_hr_cnt	remain_drtn_hr_cnt	act_work_qty	remain_work_qty	target_work_qty	target_drtn_hr_cnt	target_start_date	target_end_date	act_start_date	act_end_date	late_start_date	late_end_date	expect_end_date	early_start_date	early_end_date	restart_date	reend_date	target_start	target_end	rem_late_start_date	rem_late_end_date	cstr_type	priority_type	suspend_date	resume_date	float_path	float_path_order	guid	tmpl_guid	cstr_date	cstr_type2	cstr_date2	driving_path_flag	act_this_per_work_qty	act_this_per_equip_qty	extern_early_start_date	extern_late_end_date
+%R	3001	1000	2001	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0001	Building VA (North) - Layout - Labor		0	0	0.00	0	0.00	40.00	40.00	2026-05-18 08:00	2026-05-23 08:00	2026-05-18 08:00	2026-05-18 08:00				2026-05-18 08:00	2026-05-23 08:00			2026-05-18 08:00	2026-05-23 08:00				PT_Normal					{20260518172323-T-3001}					N	0	0		
+%R	3002	1000	2001	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0002	Building VA (North) - Framing - Labor		0	0	0.00	0	0.00	112.00	112.00	2026-05-25 08:00	2026-06-09 08:00	2026-05-25 08:00	2026-05-18 08:00				2026-05-25 08:00	2026-06-09 08:00			2026-05-25 08:00	2026-06-09 08:00				PT_Normal					{20260518172323-T-3002}					N	0	0		
+%R	3003	1000	2001	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0003	Building VA (North) - Sheathing - Labor		0	0	0.00	0	0.00	40.00	40.00	2026-06-10 08:00	2026-06-15 08:00	2026-06-10 08:00	2026-05-18 08:00				2026-06-10 08:00	2026-06-15 08:00			2026-06-10 08:00	2026-06-15 08:00				PT_Normal					{20260518172323-T-3003}					N	0	0		
+%R	3004	1000	2001	1001	0.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_NotStart	A0004	Building VA (North) - Shear Wall - Labor		0	0	8.00	0	8.00	8.00	8.00	2026-06-16 08:00	2026-06-16 08:00						2026-06-16 08:00	2026-06-16 08:00			2026-06-16 08:00	2026-06-16 08:00			CS_ALAP	PT_Normal					{20260518172323-T-3004}					N	0	0		
+%R	3005	1000	2001	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0005	Building VA (North) - Floor Truss - Labor		0	0	0.00	0	0.00	104.00	104.00	2026-06-17 08:00	2026-07-01 08:00	2026-06-17 08:00	2026-05-18 08:00				2026-06-17 08:00	2026-07-01 08:00			2026-06-17 08:00	2026-07-01 08:00				PT_Normal					{20260518172323-T-3005}					N	0	0		
+%R	3006	1000	2001	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0006	Building VA (North) - Roof Truss - Labor		0	0	0.00	0	0.00	120.00	120.00	2026-07-02 08:00	2026-07-18 08:00	2026-07-02 08:00	2026-05-18 08:00				2026-07-02 08:00	2026-07-18 08:00			2026-07-02 08:00	2026-07-18 08:00				PT_Normal					{20260518172323-T-3006}					N	0	0		
+%R	3007	1000	2001	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0007	Building VA (North) - Hardware - Labor		0	0	0.00	0	0.00	40.00	40.00	2026-07-20 08:00	2026-07-24 08:00	2026-07-20 08:00	2026-05-18 08:00				2026-07-20 08:00	2026-07-24 08:00			2026-07-20 08:00	2026-07-24 08:00				PT_Normal					{20260518172323-T-3007}					N	0	0		
+%R	3008	1000	2001	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0008	Building VA (North) - House Wrap - Labor		0	0	0.00	0	0.00	16.00	16.00	2026-07-25 08:00	2026-07-27 08:00	2026-07-25 08:00	2026-05-18 08:00				2026-07-25 08:00	2026-07-27 08:00			2026-07-25 08:00	2026-07-27 08:00				PT_Normal					{20260518172323-T-3008}					N	0	0		
+%R	3009	1000	2001	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0009	Building VA (North) - Stair Labor		0	0	0.00	0	0.00	8.00	8.00	2026-07-28 08:00	2026-07-28 08:00	2026-07-28 08:00	2026-05-18 08:00				2026-07-28 08:00	2026-07-28 08:00			2026-07-28 08:00	2026-07-28 08:00				PT_Normal					{20260518172323-T-3009}					N	0	0		
+%R	3010	1000	2001	1001	39.68	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Active	A0010	Building VA (North) - Punchout - Labor		0	0	24.13	0	24.13	40.00	40.00	2026-07-29 08:00	2026-08-03 08:00	2026-07-29 08:00					2026-07-29 08:00	2026-08-03 08:00			2026-07-29 08:00	2026-08-03 08:00				PT_Normal					{20260518172323-T-3010}					N	0	0		
+%R	3011	1000	2002	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0011	Building VA (South) - Layout - Labor		0	0	0.00	0	0.00	40.00	40.00	2026-05-18 08:00	2026-05-23 08:00	2026-05-18 08:00	2026-05-18 08:00				2026-05-18 08:00	2026-05-23 08:00			2026-05-18 08:00	2026-05-23 08:00				PT_Normal					{20260518172323-T-3011}					N	0	0		
+%R	3012	1000	2002	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0012	Building VA (South) - Framing - Labor		0	0	0.00	0	0.00	184.00	184.00	2026-05-25 08:00	2026-06-19 08:00	2026-05-25 08:00	2026-05-18 08:00				2026-05-25 08:00	2026-06-19 08:00			2026-05-25 08:00	2026-06-19 08:00				PT_Normal					{20260518172323-T-3012}					N	0	0		
+%R	3013	1000	2002	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0013	Building VA (South) - Sheathing - Labor		0	0	0.00	0	0.00	40.00	40.00	2026-06-20 08:00	2026-06-25 08:00	2026-06-20 08:00	2026-05-18 08:00				2026-06-20 08:00	2026-06-25 08:00			2026-06-20 08:00	2026-06-25 08:00				PT_Normal					{20260518172323-T-3013}					N	0	0		
+%R	3014	1000	2002	1001	0.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_NotStart	A0014	Building VA (South) - Shear Wall - Labor		0	0	16.00	0	16.00	16.00	16.00	2026-06-26 08:00	2026-06-27 08:00						2026-06-26 08:00	2026-06-27 08:00			2026-06-26 08:00	2026-06-27 08:00			CS_ALAP	PT_Normal					{20260518172323-T-3014}					N	0	0		
+%R	3015	1000	2002	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0015	Building VA (South) - Floor Truss - Labor		0	0	0.00	0	0.00	104.00	104.00	2026-06-29 08:00	2026-07-13 08:00	2026-06-29 08:00	2026-05-18 08:00				2026-06-29 08:00	2026-07-13 08:00			2026-06-29 08:00	2026-07-13 08:00				PT_Normal					{20260518172323-T-3015}					N	0	0		
+%R	3016	1000	2002	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0016	Building VA (South) - Roof Truss - Labor		0	0	0.00	0	0.00	120.00	120.00	2026-07-14 08:00	2026-07-30 08:00	2026-07-14 08:00	2026-05-18 08:00				2026-07-14 08:00	2026-07-30 08:00			2026-07-14 08:00	2026-07-30 08:00				PT_Normal					{20260518172323-T-3016}					N	0	0		
+%R	3017	1000	2002	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0017	Building VA (South) - Hardware - Labor		0	0	0.00	0	0.00	40.00	40.00	2026-07-31 08:00	2026-08-05 08:00	2026-07-31 08:00	2026-05-18 08:00				2026-07-31 08:00	2026-08-05 08:00			2026-07-31 08:00	2026-08-05 08:00				PT_Normal					{20260518172323-T-3017}					N	0	0		
+%R	3018	1000	2002	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0018	Building VA (South) - House Wrap - Labor		0	0	0.00	0	0.00	16.00	16.00	2026-08-06 08:00	2026-08-07 08:00	2026-08-06 08:00	2026-05-18 08:00				2026-08-06 08:00	2026-08-07 08:00			2026-08-06 08:00	2026-08-07 08:00				PT_Normal					{20260518172323-T-3018}					N	0	0		
+%R	3019	1000	2002	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0019	Building VA (South) - Stair Labor		0	0	0.00	0	0.00	8.00	8.00	2026-08-08 08:00	2026-08-08 08:00	2026-08-08 08:00	2026-05-18 08:00				2026-08-08 08:00	2026-08-08 08:00			2026-08-08 08:00	2026-08-08 08:00				PT_Normal					{20260518172323-T-3019}					N	0	0		
+%R	3020	1000	2002	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0020	Building VA (South) - Punchout - Labor		0	0	0.00	0	0.00	40.00	40.00	2026-08-10 08:00	2026-08-14 08:00	2026-08-10 08:00	2026-05-18 08:00				2026-08-10 08:00	2026-08-14 08:00			2026-08-10 08:00	2026-08-14 08:00				PT_Normal					{20260518172323-T-3020}					N	0	0		
+%R	3021	1000	2003	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0021	Club house VB (North) - Layout - Labor		0	0	0.00	0	0.00	8.00	8.00	2026-05-18 08:00	2026-05-19 08:00	2026-05-18 08:00	2026-05-18 08:00				2026-05-18 08:00	2026-05-19 08:00			2026-05-18 08:00	2026-05-19 08:00				PT_Normal					{20260518172323-T-3021}					N	0	0		
+%R	3022	1000	2003	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0022	Club house VB (North) - Framing - Labor		0	0	0.00	0	0.00	32.00	32.00	2026-05-20 08:00	2026-05-23 08:00	2026-05-20 08:00	2026-05-18 08:00				2026-05-20 08:00	2026-05-23 08:00			2026-05-20 08:00	2026-05-23 08:00				PT_Normal					{20260518172323-T-3022}					N	0	0		
+%R	3023	1000	2003	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0023	Club house VB (North) - Sheathing - Labor		0	0	0.00	0	0.00	8.00	8.00	2026-05-25 08:00	2026-05-25 08:00	2026-05-25 08:00	2026-05-18 08:00				2026-05-25 08:00	2026-05-25 08:00			2026-05-25 08:00	2026-05-25 08:00				PT_Normal					{20260518172323-T-3023}					N	0	0		
+%R	3024	1000	2003	1001	0.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_NotStart	A0024	Club house VB (North) - Shear Wall - Labor		0	0	8.00	0	8.00	8.00	8.00	2026-05-26 08:00	2026-05-26 08:00						2026-05-26 08:00	2026-05-26 08:00			2026-05-26 08:00	2026-05-26 08:00			CS_ALAP	PT_Normal					{20260518172323-T-3024}					N	0	0		
+%R	3025	1000	2003	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0025	Club house VB (North) - Roof Truss - Labor		0	0	0.00	0	0.00	64.00	64.00	2026-05-27 08:00	2026-06-04 08:00	2026-05-27 08:00	2026-05-18 08:00				2026-05-27 08:00	2026-06-04 08:00			2026-05-27 08:00	2026-06-04 08:00				PT_Normal					{20260518172323-T-3025}					N	0	0		
+%R	3026	1000	2003	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0026	Club house VB (North) - Hardware - Labor		0	0	0.00	0	0.00	8.00	8.00	2026-06-05 08:00	2026-06-05 08:00	2026-06-05 08:00	2026-05-18 08:00				2026-06-05 08:00	2026-06-05 08:00			2026-06-05 08:00	2026-06-05 08:00				PT_Normal					{20260518172323-T-3026}					N	0	0		
+%R	3027	1000	2003	1001	0.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_NotStart	A0027	Club house VB (North) - House Wrap - Labor		0	0	8.00	0	8.00	8.00	8.00	2026-06-06 08:00	2026-06-06 08:00						2026-06-06 08:00	2026-06-06 08:00			2026-06-06 08:00	2026-06-06 08:00			CS_ALAP	PT_Normal					{20260518172323-T-3027}					N	0	0		
+%R	3028	1000	2003	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0028	Club house VB (North) - Punchout - Labor		0	0	0.00	0	0.00	8.00	8.00	2026-06-08 08:00	2026-06-08 08:00	2026-06-08 08:00	2026-05-18 08:00				2026-06-08 08:00	2026-06-08 08:00			2026-06-08 08:00	2026-06-08 08:00				PT_Normal					{20260518172323-T-3028}					N	0	0		
+%R	3029	1000	2004	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0029	Mail Kiosk (North) - Layout - Labor		0	0	0.00	0	0.00	8.00	8.00	2026-05-18 08:00	2026-05-19 08:00	2026-05-18 08:00	2026-05-18 08:00				2026-05-18 08:00	2026-05-19 08:00			2026-05-18 08:00	2026-05-19 08:00				PT_Normal					{20260518172323-T-3029}					N	0	0		
+%R	3030	1000	2004	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0030	Mail Kiosk (North) - Framing - Labor		0	0	0.00	0	0.00	8.00	8.00	2026-05-20 08:00	2026-05-20 08:00	2026-05-20 08:00	2026-05-18 08:00				2026-05-20 08:00	2026-05-20 08:00			2026-05-20 08:00	2026-05-20 08:00				PT_Normal					{20260518172323-T-3030}					N	0	0		
+%R	3031	1000	2004	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0031	Mail Kiosk (North) - Sheathing - Labor		0	0	0.00	0	0.00	8.00	8.00	2026-05-21 08:00	2026-05-21 08:00	2026-05-21 08:00	2026-05-18 08:00				2026-05-21 08:00	2026-05-21 08:00			2026-05-21 08:00	2026-05-21 08:00				PT_Normal					{20260518172323-T-3031}					N	0	0		
+%R	3032	1000	2004	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0032	Mail Kiosk (North) - Roof Truss - Labor		0	0	0.00	0	0.00	8.00	8.00	2026-05-22 08:00	2026-05-22 08:00	2026-05-22 08:00	2026-05-18 08:00				2026-05-22 08:00	2026-05-22 08:00			2026-05-22 08:00	2026-05-22 08:00				PT_Normal					{20260518172323-T-3032}					N	0	0		
+%R	3033	1000	2004	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0033	Mail Kiosk (North) - Hardware - Labor		0	0	0.00	0	0.00	8.00	8.00	2026-05-23 08:00	2026-05-23 08:00	2026-05-23 08:00	2026-05-18 08:00				2026-05-23 08:00	2026-05-23 08:00			2026-05-23 08:00	2026-05-23 08:00				PT_Normal					{20260518172323-T-3033}					N	0	0		
+%R	3034	1000	2004	1001	0.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_NotStart	A0034	Mail Kiosk (North) - Punchout - Labor		0	0	8.00	0	8.00	8.00	8.00	2026-05-25 08:00	2026-05-25 08:00						2026-05-25 08:00	2026-05-25 08:00			2026-05-25 08:00	2026-05-25 08:00			CS_ALAP	PT_Normal					{20260518172323-T-3034}					N	0	0		
+%R	3035	1000	2005	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0035	Mail Kiosk (South) - Layout - Labor		0	0	0.00	0	0.00	8.00	8.00	2026-05-18 08:00	2026-05-19 08:00	2026-05-18 08:00	2026-05-18 08:00				2026-05-18 08:00	2026-05-19 08:00			2026-05-18 08:00	2026-05-19 08:00				PT_Normal					{20260518172323-T-3035}					N	0	0		
+%R	3036	1000	2005	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0036	Mail Kiosk (South) - Framing - Labor		0	0	0.00	0	0.00	8.00	8.00	2026-05-20 08:00	2026-05-20 08:00	2026-05-20 08:00	2026-05-18 08:00				2026-05-20 08:00	2026-05-20 08:00			2026-05-20 08:00	2026-05-20 08:00				PT_Normal					{20260518172323-T-3036}					N	0	0		
+%R	3037	1000	2005	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0037	Mail Kiosk (South) - Sheathing - Labor		0	0	0.00	0	0.00	8.00	8.00	2026-05-21 08:00	2026-05-21 08:00	2026-05-21 08:00	2026-05-18 08:00				2026-05-21 08:00	2026-05-21 08:00			2026-05-21 08:00	2026-05-21 08:00				PT_Normal					{20260518172323-T-3037}					N	0	0		
+%R	3038	1000	2005	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0038	Mail Kiosk (South) - Roof Truss - Labor		0	0	0.00	0	0.00	8.00	8.00	2026-05-22 08:00	2026-05-22 08:00	2026-05-22 08:00	2026-05-18 08:00				2026-05-22 08:00	2026-05-22 08:00			2026-05-22 08:00	2026-05-22 08:00				PT_Normal					{20260518172323-T-3038}					N	0	0		
+%R	3039	1000	2005	1001	100.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Complete	A0039	Mail Kiosk (South) - Hardware - Labor		0	0	0.00	0	0.00	8.00	8.00	2026-05-23 08:00	2026-05-23 08:00	2026-05-23 08:00	2026-05-18 08:00				2026-05-23 08:00	2026-05-23 08:00			2026-05-23 08:00	2026-05-23 08:00				PT_Normal					{20260518172323-T-3039}					N	0	0		
+%R	3040	1000	2005	1001	0.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_NotStart	A0040	Mail Kiosk (South) - Punchout - Labor		0	0	8.00	0	8.00	8.00	8.00	2026-05-25 08:00	2026-05-25 08:00						2026-05-25 08:00	2026-05-25 08:00			2026-05-25 08:00	2026-05-25 08:00			CS_ALAP	PT_Normal					{20260518172323-T-3040}					N	0	0		
+%R	3041	1000	2006	1001	0.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_NotStart	A0041	Trash Enclosure (North) - Layout - Labor		0	0	8.00	0	8.00	8.00	8.00	2026-05-18 08:00	2026-05-19 08:00						2026-05-18 08:00	2026-05-19 08:00			2026-05-18 08:00	2026-05-19 08:00			CS_ALAP	PT_Normal					{20260518172323-T-3041}					N	0	0		
+%R	3042	1000	2006	1001	69.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Active	A0042	Trash Enclosure (North) - Framing - Labor		0	0	2.48	0	2.48	8.00	8.00	2026-05-20 08:00	2026-05-20 08:00	2026-05-20 08:00					2026-05-20 08:00	2026-05-20 08:00			2026-05-20 08:00	2026-05-20 08:00				PT_Normal					{20260518172323-T-3042}					N	0	0		
+%R	3043	1000	2006	1001	0.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_NotStart	A0043	Trash Enclosure (North) - Sheathing - Labor		0	0	8.00	0	8.00	8.00	8.00	2026-05-21 08:00	2026-05-21 08:00						2026-05-21 08:00	2026-05-21 08:00			2026-05-21 08:00	2026-05-21 08:00			CS_ALAP	PT_Normal					{20260518172323-T-3043}					N	0	0		
+%R	3044	1000	2006	1001	0.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_NotStart	A0044	Trash Enclosure (North) - Hardware - Labor		0	0	8.00	0	8.00	8.00	8.00	2026-05-22 08:00	2026-05-22 08:00						2026-05-22 08:00	2026-05-22 08:00			2026-05-22 08:00	2026-05-22 08:00			CS_ALAP	PT_Normal					{20260518172323-T-3044}					N	0	0		
+%R	3045	1000	2006	1001	0.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_NotStart	A0045	Trash Enclosure (North) - Punchout - Labor		0	0	8.00	0	8.00	8.00	8.00	2026-05-23 08:00	2026-05-23 08:00						2026-05-23 08:00	2026-05-23 08:00			2026-05-23 08:00	2026-05-23 08:00			CS_ALAP	PT_Normal					{20260518172323-T-3045}					N	0	0		
+%R	3046	1000	2007	1001	0.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_NotStart	A0046	Trash Enclosure (South) - Layout - Labor		0	0	8.00	0	8.00	8.00	8.00	2026-05-18 08:00	2026-05-19 08:00						2026-05-18 08:00	2026-05-19 08:00			2026-05-18 08:00	2026-05-19 08:00			CS_ALAP	PT_Normal					{20260518172323-T-3046}					N	0	0		
+%R	3047	1000	2007	1001	69.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_Active	A0047	Trash Enclosure (South) - Framing - Labor		0	0	2.48	0	2.48	8.00	8.00	2026-05-20 08:00	2026-05-20 08:00	2026-05-20 08:00					2026-05-20 08:00	2026-05-20 08:00			2026-05-20 08:00	2026-05-20 08:00				PT_Normal					{20260518172323-T-3047}					N	0	0		
+%R	3048	1000	2007	1001	0.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_NotStart	A0048	Trash Enclosure (South) - Sheathing - Labor		0	0	8.00	0	8.00	8.00	8.00	2026-05-21 08:00	2026-05-21 08:00						2026-05-21 08:00	2026-05-21 08:00			2026-05-21 08:00	2026-05-21 08:00			CS_ALAP	PT_Normal					{20260518172323-T-3048}					N	0	0		
+%R	3049	1000	2007	1001	0.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_NotStart	A0049	Trash Enclosure (South) - Hardware - Labor		0	0	8.00	0	8.00	8.00	8.00	2026-05-22 08:00	2026-05-22 08:00						2026-05-22 08:00	2026-05-22 08:00			2026-05-22 08:00	2026-05-22 08:00			CS_ALAP	PT_Normal					{20260518172323-T-3049}					N	0	0		
+%R	3050	1000	2007	1001	0.00	N	1	N	N	CP_Drtn	TT_Task	DT_FixedDUR2	TK_NotStart	A0050	Trash Enclosure (South) - Punchout - Labor		0	0	8.00	0	8.00	8.00	8.00	2026-05-23 08:00	2026-05-23 08:00						2026-05-23 08:00	2026-05-23 08:00			2026-05-23 08:00	2026-05-23 08:00			CS_ALAP	PT_Normal					{20260518172323-T-3050}					N	0	0		
+%E
+%T	TASKPRED
+%F	task_pred_id	task_id	pred_task_id	proj_id	pred_proj_id	pred_type	lag_hr_cnt	comments	float_path	aref	arls
+%R	4001	3002	3001	1000	1000	PR_FS	0				
+%R	4002	3003	3002	1000	1000	PR_FS	0				
+%R	4003	3004	3003	1000	1000	PR_FS	0				
+%R	4004	3005	3004	1000	1000	PR_FS	0				
+%R	4005	3006	3005	1000	1000	PR_FS	0				
+%R	4006	3007	3006	1000	1000	PR_FS	0				
+%R	4007	3008	3007	1000	1000	PR_FS	0				
+%R	4008	3009	3008	1000	1000	PR_FS	0				
+%R	4009	3010	3009	1000	1000	PR_FS	0				
+%R	4010	3012	3011	1000	1000	PR_FS	0				
+%R	4011	3013	3012	1000	1000	PR_FS	0				
+%R	4012	3014	3013	1000	1000	PR_FS	0				
+%R	4013	3015	3014	1000	1000	PR_FS	0				
+%R	4014	3016	3015	1000	1000	PR_FS	0				
+%R	4015	3017	3016	1000	1000	PR_FS	0				
+%R	4016	3018	3017	1000	1000	PR_FS	0				
+%R	4017	3019	3018	1000	1000	PR_FS	0				
+%R	4018	3020	3019	1000	1000	PR_FS	0				
+%R	4019	3022	3021	1000	1000	PR_FS	0				
+%R	4020	3023	3022	1000	1000	PR_FS	0				
+%R	4021	3024	3023	1000	1000	PR_FS	0				
+%R	4022	3025	3024	1000	1000	PR_FS	0				
+%R	4023	3026	3025	1000	1000	PR_FS	0				
+%R	4024	3027	3026	1000	1000	PR_FS	0				
+%R	4025	3028	3027	1000	1000	PR_FS	0				
+%R	4026	3030	3029	1000	1000	PR_FS	0				
+%R	4027	3031	3030	1000	1000	PR_FS	0				
+%R	4028	3032	3031	1000	1000	PR_FS	0				
+%R	4029	3033	3032	1000	1000	PR_FS	0				
+%R	4030	3034	3033	1000	1000	PR_FS	0				
+%R	4031	3036	3035	1000	1000	PR_FS	0				
+%R	4032	3037	3036	1000	1000	PR_FS	0				
+%R	4033	3038	3037	1000	1000	PR_FS	0				
+%R	4034	3039	3038	1000	1000	PR_FS	0				
+%R	4035	3040	3039	1000	1000	PR_FS	0				
+%R	4036	3042	3041	1000	1000	PR_FS	0				
+%R	4037	3043	3042	1000	1000	PR_FS	0				
+%R	4038	3044	3043	1000	1000	PR_FS	0				
+%R	4039	3045	3044	1000	1000	PR_FS	0				
+%R	4040	3047	3046	1000	1000	PR_FS	0				
+%R	4041	3048	3047	1000	1000	PR_FS	0				
+%R	4042	3049	3048	1000	1000	PR_FS	0				
+%R	4043	3050	3049	1000	1000	PR_FS	0				
+%E
+%E

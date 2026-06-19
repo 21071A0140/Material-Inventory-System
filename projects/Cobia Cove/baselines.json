@@ -1,0 +1,773 @@
+{
+  "baselines": [
+    {
+      "id": 1,
+      "name": "BT Estimate Baseline",
+      "created": "2026-05-17",
+      "locked": false,
+      "activities": [
+        {
+          "id": "A0001",
+          "name": "Bldg 1 - Layout - Labor",
+          "start": "2026-05-16",
+          "finish": "2026-05-18",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0002",
+          "name": "Bldg 1 - Framing - Labor",
+          "start": "2026-05-18",
+          "finish": "2026-05-26",
+          "duration": 7,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0003",
+          "name": "Bldg 1 - Sheathing - Labor",
+          "start": "2026-05-26",
+          "finish": "2026-05-27",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0004",
+          "name": "Bldg 1 - Roof Truss - Labor",
+          "start": "2026-05-27",
+          "finish": "2026-06-03",
+          "duration": 6,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0005",
+          "name": "Bldg 1 - Hardware - Labor",
+          "start": "2026-06-03",
+          "finish": "2026-06-04",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0006",
+          "name": "Bldg 1 - House Wrap - Labor",
+          "start": "2026-06-04",
+          "finish": "2026-06-05",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0007",
+          "name": "Bldg 1 - Punchout - Labor",
+          "start": "2026-06-05",
+          "finish": "2026-06-06",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0008",
+          "name": "Bldg 1 - Window - Labor",
+          "start": "2026-06-06",
+          "finish": "2026-06-08",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0009",
+          "name": "Bldg 1 - Roofing - Labor",
+          "start": "2026-06-08",
+          "finish": "2026-06-16",
+          "duration": 7,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0010",
+          "name": "Bldg 2 - Layout - Labor",
+          "start": "2026-05-16",
+          "finish": "2026-05-25",
+          "duration": 7,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0011",
+          "name": "Bldg 2 - Framing - Labor",
+          "start": "2026-05-25",
+          "finish": "2026-07-02",
+          "duration": 33,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0012",
+          "name": "Bldg 2 - Sheathing - Labor",
+          "start": "2026-07-02",
+          "finish": "2026-07-15",
+          "duration": 11,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0013",
+          "name": "Bldg 2 - Floor Truss - Labor",
+          "start": "2026-07-15",
+          "finish": "2026-08-10",
+          "duration": 22,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0014",
+          "name": "Bldg 2 - Roof Truss - Labor",
+          "start": "2026-08-10",
+          "finish": "2026-09-15",
+          "duration": 31,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0015",
+          "name": "Bldg 2 - Hardware - Labor",
+          "start": "2026-09-15",
+          "finish": "2026-09-23",
+          "duration": 7,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0016",
+          "name": "Bldg 2 - House Wrap - Labor",
+          "start": "2026-09-23",
+          "finish": "2026-09-29",
+          "duration": 5,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0017",
+          "name": "Bldg 2 - Punchout - Labor",
+          "start": "2026-09-29",
+          "finish": "2026-10-07",
+          "duration": 7,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0018",
+          "name": "Bldg 2 - Balcony - Labor",
+          "start": "2026-10-07",
+          "finish": "2026-10-21",
+          "duration": 12,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0019",
+          "name": "Bldg 2 - Window - Labor",
+          "start": "2026-10-21",
+          "finish": "2026-10-28",
+          "duration": 6,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0020",
+          "name": "Bldg 2 - Roofing - Labor",
+          "start": "2026-10-28",
+          "finish": "2026-11-09",
+          "duration": 10,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0021",
+          "name": "Bldg 3 - Layout - Labor",
+          "start": "2026-05-16",
+          "finish": "2026-05-26",
+          "duration": 8,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0022",
+          "name": "Bldg 3 - Framing - Labor",
+          "start": "2026-05-26",
+          "finish": "2026-07-04",
+          "duration": 34,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0023",
+          "name": "Bldg 3 - Sheathing - Labor",
+          "start": "2026-07-04",
+          "finish": "2026-07-17",
+          "duration": 11,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0024",
+          "name": "Bldg 3 - Floor Truss - Labor",
+          "start": "2026-07-17",
+          "finish": "2026-08-13",
+          "duration": 23,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0025",
+          "name": "Bldg 3 - Roof Truss - Labor",
+          "start": "2026-08-13",
+          "finish": "2026-09-19",
+          "duration": 32,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0026",
+          "name": "Bldg 3 - Hardware - Labor",
+          "start": "2026-09-19",
+          "finish": "2026-09-29",
+          "duration": 8,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0027",
+          "name": "Bldg 3 - House Wrap - Labor",
+          "start": "2026-09-29",
+          "finish": "2026-10-06",
+          "duration": 6,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0028",
+          "name": "Bldg 3 - Punchout - Labor",
+          "start": "2026-10-06",
+          "finish": "2026-10-15",
+          "duration": 8,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0029",
+          "name": "Bldg 3 - Balcony - Labor",
+          "start": "2026-10-15",
+          "finish": "2026-10-29",
+          "duration": 12,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0030",
+          "name": "Bldg 3 - Window - Labor",
+          "start": "2026-10-29",
+          "finish": "2026-11-07",
+          "duration": 8,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0031",
+          "name": "Bldg 3 - Roofing - Labor",
+          "start": "2026-11-07",
+          "finish": "2026-11-20",
+          "duration": 11,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0032",
+          "name": "Bldg 4 - Layout - Labor",
+          "start": "2026-05-16",
+          "finish": "2026-05-25",
+          "duration": 7,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0033",
+          "name": "Bldg 4 - Framing - Labor",
+          "start": "2026-05-25",
+          "finish": "2026-07-02",
+          "duration": 33,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0034",
+          "name": "Bldg 4 - Sheathing - Labor",
+          "start": "2026-07-02",
+          "finish": "2026-07-15",
+          "duration": 11,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0035",
+          "name": "Bldg 4 - Floor Truss - Labor",
+          "start": "2026-07-15",
+          "finish": "2026-08-10",
+          "duration": 22,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0036",
+          "name": "Bldg 4 - Roof Truss - Labor",
+          "start": "2026-08-10",
+          "finish": "2026-09-16",
+          "duration": 32,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0037",
+          "name": "Bldg 4 - Hardware - Labor",
+          "start": "2026-09-16",
+          "finish": "2026-09-24",
+          "duration": 7,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0038",
+          "name": "Bldg 4 - House Wrap - Labor",
+          "start": "2026-09-24",
+          "finish": "2026-09-30",
+          "duration": 5,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0039",
+          "name": "Bldg 4 - Punchout - Labor",
+          "start": "2026-09-30",
+          "finish": "2026-10-08",
+          "duration": 7,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0040",
+          "name": "Bldg 4 - Balcony - Labor",
+          "start": "2026-10-08",
+          "finish": "2026-10-22",
+          "duration": 12,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0041",
+          "name": "Bldg 4 - Window - Labor",
+          "start": "2026-10-22",
+          "finish": "2026-10-29",
+          "duration": 6,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0042",
+          "name": "Bldg 4 - Roofing - Labor",
+          "start": "2026-10-29",
+          "finish": "2026-11-10",
+          "duration": 10,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0043",
+          "name": "Bldg 5 - Layout - Labor",
+          "start": "2026-05-16",
+          "finish": "2026-05-26",
+          "duration": 8,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0044",
+          "name": "Bldg 5 - Framing - Labor",
+          "start": "2026-05-26",
+          "finish": "2026-07-04",
+          "duration": 34,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0045",
+          "name": "Bldg 5 - Sheathing - Labor",
+          "start": "2026-07-04",
+          "finish": "2026-07-17",
+          "duration": 11,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0046",
+          "name": "Bldg 5 - Floor Truss - Labor",
+          "start": "2026-07-17",
+          "finish": "2026-08-13",
+          "duration": 23,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0047",
+          "name": "Bldg 5 - Roof Truss - Labor",
+          "start": "2026-08-13",
+          "finish": "2026-09-18",
+          "duration": 31,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0048",
+          "name": "Bldg 5 - Hardware - Labor",
+          "start": "2026-09-18",
+          "finish": "2026-09-28",
+          "duration": 8,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0049",
+          "name": "Bldg 5 - House Wrap - Labor",
+          "start": "2026-09-28",
+          "finish": "2026-10-05",
+          "duration": 6,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0050",
+          "name": "Bldg 5 - Punchout - Labor",
+          "start": "2026-10-05",
+          "finish": "2026-10-13",
+          "duration": 7,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0051",
+          "name": "Bldg 5 - Balcony - Labor",
+          "start": "2026-10-13",
+          "finish": "2026-10-27",
+          "duration": 12,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0052",
+          "name": "Bldg 5 - Window - Labor",
+          "start": "2026-10-27",
+          "finish": "2026-11-05",
+          "duration": 8,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0053",
+          "name": "Bldg 5 - Roofing - Labor",
+          "start": "2026-11-05",
+          "finish": "2026-11-18",
+          "duration": 11,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0054",
+          "name": "Bldg 6 - Layout - Labor",
+          "start": "2026-05-16",
+          "finish": "2026-05-26",
+          "duration": 8,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0055",
+          "name": "Bldg 6 - Framing - Labor",
+          "start": "2026-05-26",
+          "finish": "2026-07-04",
+          "duration": 34,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0056",
+          "name": "Bldg 6 - Sheathing - Labor",
+          "start": "2026-07-04",
+          "finish": "2026-07-17",
+          "duration": 11,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0057",
+          "name": "Bldg 6 - Floor Truss - Labor",
+          "start": "2026-07-17",
+          "finish": "2026-08-13",
+          "duration": 23,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0058",
+          "name": "Bldg 6 - Roof Truss - Labor",
+          "start": "2026-08-13",
+          "finish": "2026-09-18",
+          "duration": 31,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0059",
+          "name": "Bldg 6 - Hardware - Labor",
+          "start": "2026-09-18",
+          "finish": "2026-09-28",
+          "duration": 8,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0060",
+          "name": "Bldg 6 - House Wrap - Labor",
+          "start": "2026-09-28",
+          "finish": "2026-10-03",
+          "duration": 5,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0061",
+          "name": "Bldg 6 - Punchout - Labor",
+          "start": "2026-10-03",
+          "finish": "2026-10-12",
+          "duration": 7,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0062",
+          "name": "Bldg 6 - Balcony - Labor",
+          "start": "2026-10-12",
+          "finish": "2026-10-26",
+          "duration": 12,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0063",
+          "name": "Bldg 6 - Window - Labor",
+          "start": "2026-10-26",
+          "finish": "2026-11-02",
+          "duration": 6,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0064",
+          "name": "Bldg 6 - Roofing - Labor",
+          "start": "2026-11-02",
+          "finish": "2026-11-13",
+          "duration": 10,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0065",
+          "name": "Bldg 7 - Layout - Labor",
+          "start": "2026-05-16",
+          "finish": "2026-05-23",
+          "duration": 6,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0066",
+          "name": "Bldg 7 - Framing - Labor",
+          "start": "2026-05-23",
+          "finish": "2026-06-23",
+          "duration": 26,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0067",
+          "name": "Bldg 7 - Sheathing - Labor",
+          "start": "2026-06-23",
+          "finish": "2026-07-03",
+          "duration": 9,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0068",
+          "name": "Bldg 7 - Floor Truss - Labor",
+          "start": "2026-07-03",
+          "finish": "2026-07-23",
+          "duration": 17,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0069",
+          "name": "Bldg 7 - Roof Truss - Labor",
+          "start": "2026-07-23",
+          "finish": "2026-08-21",
+          "duration": 25,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0070",
+          "name": "Bldg 7 - Hardware - Labor",
+          "start": "2026-08-21",
+          "finish": "2026-08-28",
+          "duration": 6,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0071",
+          "name": "Bldg 7 - House Wrap - Labor",
+          "start": "2026-08-28",
+          "finish": "2026-09-03",
+          "duration": 5,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0072",
+          "name": "Bldg 7 - Punchout - Labor",
+          "start": "2026-09-03",
+          "finish": "2026-09-10",
+          "duration": 6,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0073",
+          "name": "Bldg 7 - Balcony - Labor",
+          "start": "2026-09-10",
+          "finish": "2026-09-19",
+          "duration": 8,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0074",
+          "name": "Bldg 7 - Window - Labor",
+          "start": "2026-09-19",
+          "finish": "2026-09-28",
+          "duration": 7,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0075",
+          "name": "Bldg 7 - Roofing - Labor",
+          "start": "2026-09-28",
+          "finish": "2026-10-08",
+          "duration": 9,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0076",
+          "name": "Bldg 8 - Layout - Labor",
+          "start": "2026-05-16",
+          "finish": "2026-05-23",
+          "duration": 6,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0077",
+          "name": "Bldg 8 - Framing - Labor",
+          "start": "2026-05-23",
+          "finish": "2026-06-23",
+          "duration": 26,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0078",
+          "name": "Bldg 8 - Sheathing - Labor",
+          "start": "2026-06-23",
+          "finish": "2026-07-03",
+          "duration": 9,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0079",
+          "name": "Bldg 8 - Floor Truss - Labor",
+          "start": "2026-07-03",
+          "finish": "2026-07-23",
+          "duration": 17,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0080",
+          "name": "Bldg 8 - Roof Truss - Labor",
+          "start": "2026-07-23",
+          "finish": "2026-08-21",
+          "duration": 25,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0081",
+          "name": "Bldg 8 - Hardware - Labor",
+          "start": "2026-08-21",
+          "finish": "2026-08-28",
+          "duration": 6,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0082",
+          "name": "Bldg 8 - House Wrap - Labor",
+          "start": "2026-08-28",
+          "finish": "2026-09-03",
+          "duration": 5,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0083",
+          "name": "Bldg 8 - Punchout - Labor",
+          "start": "2026-09-03",
+          "finish": "2026-09-10",
+          "duration": 6,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0084",
+          "name": "Bldg 8 - Balcony - Labor",
+          "start": "2026-09-10",
+          "finish": "2026-09-19",
+          "duration": 8,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0085",
+          "name": "Bldg 8 - Window - Labor",
+          "start": "2026-09-19",
+          "finish": "2026-09-28",
+          "duration": 7,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0086",
+          "name": "Bldg 8 - Roofing - Labor",
+          "start": "2026-09-28",
+          "finish": "2026-10-08",
+          "duration": 9,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0087",
+          "name": "Bldg 9 - Layout - Labor",
+          "start": "2026-05-16",
+          "finish": "2026-05-18",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0088",
+          "name": "Bldg 9 - Framing - Labor",
+          "start": "2026-05-18",
+          "finish": "2026-05-19",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0089",
+          "name": "Bldg 9 - Sheathing - Labor",
+          "start": "2026-05-19",
+          "finish": "2026-05-20",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0090",
+          "name": "Bldg 9 - Roof Truss - Labor",
+          "start": "2026-05-20",
+          "finish": "2026-05-21",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0091",
+          "name": "Bldg 9 - Hardware - Labor",
+          "start": "2026-05-21",
+          "finish": "2026-05-22",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0092",
+          "name": "Bldg 9 - House Wrap - Labor",
+          "start": "2026-05-22",
+          "finish": "2026-05-23",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0093",
+          "name": "Bldg 9 - Punchout - Labor",
+          "start": "2026-05-23",
+          "finish": "2026-05-25",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0094",
+          "name": "Bldg 9 - Window - Labor",
+          "start": "2026-05-25",
+          "finish": "2026-05-26",
+          "duration": 1,
+          "pct_complete": 0
+        },
+        {
+          "id": "A0095",
+          "name": "Bldg 9 - Roofing - Labor",
+          "start": "2026-05-26",
+          "finish": "2026-05-27",
+          "duration": 1,
+          "pct_complete": 0
+        }
+      ]
+    }
+  ],
+  "next_bl_id": 2
+}

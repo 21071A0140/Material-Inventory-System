@@ -1,0 +1,23 @@
+{
+  "invoices": [
+    {
+      "invoice_no": "60126015",
+      "date": "2026-06-18",
+      "manual": true
+    }
+  ],
+  "co_count": 0,
+  "change_orders": [],
+  "unmatched_items": [],
+  "gsf": 386444,
+  "state": "CO",
+  "building_type": "TYPE V",
+  "project_name": "Crowne at Suniga",
+  "po_files": {
+    "lumber": "MATHEUS - SUNIGA- 05.11.26 (1).pdf"
+  },
+  "po_file": "MATHEUS - SUNIGA- 05.11.26 (1).pdf",
+  "po_tax_rate": 0.0,
+  "delivery_tax_rate": 0.0,
+  "tax_rate": 0.0
+}

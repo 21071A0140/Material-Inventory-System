@@ -1,0 +1,16 @@
+[
+  {
+    "type": "Lumber",
+    "description": "2x6x12 SYP #2",
+    "t_num": 2.0,
+    "w_num": 6.0,
+    "length_num": 12.0,
+    "po_qty": 100.0,
+    "co_qty": 20.0,
+    "unit_cost": 0.0,
+    "deliveries": {},
+    "leftover_lf": 0.0,
+    "source": "manual",
+    "cost_formula": null
+  }
+]
