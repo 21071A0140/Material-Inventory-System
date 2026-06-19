@@ -908,7 +908,7 @@ tr:not(.subtotal):not(.grand):hover td{background:rgba(36,84,255,.04)}
 <div class="toast" id="toast"></div>
 
 <script>
-const API = 'http://localhost:8000';
+const API = window.location.origin;
 let currentProject = '', allItems = [], currentMeta = {}, currentFilter = 'all';
 let pendingTypeIdx = null, editingItemIdx = null, editMode = false;
 let _coPreviewData = null;
