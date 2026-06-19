@@ -10,6 +10,7 @@ from datetime import datetime
 
 # ── API Key ───────────────────────────────────────────────────────────────────
 import os
+
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
 import pdfplumber
@@ -17,9 +18,10 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import anthropic
+
 # Schedule / BT estimate dependencies
 try:
     import pandas as pd
@@ -28,6 +30,7 @@ try:
 except ImportError:
     PANDAS_OK = False
     pd = None
+
 BASE_DIR   = Path(__file__).parent
 PROJECTS   = BASE_DIR / "projects"
 import tempfile as _tmp_s
@@ -41,7 +44,6 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 @app.get("/")
 def home():
     return FileResponse(BASE_DIR / "index.html")
-
 
 _claude = None
 def get_claude():
@@ -255,7 +257,7 @@ def parse_po_with_claude(text, po_category="lumber"):
     ) + text + "\n\nReturn ONLY the JSON array. Include ALL rows."
 
     msg = get_claude().messages.create(
-        model="claude-sonnet-4-20250514", max_tokens=16000,
+        model="claude-sonnet-4-5", max_tokens=16000,
         messages=[{"role": "user", "content": prompt}])
     items = safe_json_parse(next((getattr(b,"text","") for b in msg.content if hasattr(b,"text")),"").strip())
 
@@ -316,7 +318,7 @@ def parse_co_with_claude(text, po_items):
         "CO TEXT:\n"
     ) + text + "\n\nReturn ONLY the JSON array."
     msg = get_claude().messages.create(
-        model="claude-sonnet-4-20250514", max_tokens=16000,
+        model="claude-sonnet-4-5", max_tokens=16000,
         messages=[{"role": "user", "content": prompt}])
     raw_items = safe_json_parse(next((getattr(b,"text","") for b in msg.content if hasattr(b,"text")),"").strip())
 
@@ -446,7 +448,7 @@ PO/CO ITEMS:
 """ + po_summary + "\n\nINVOICE TEXT:\n" + text + "\n\nReturn ONLY the JSON array."
 
     msg = get_claude().messages.create(
-        model="claude-sonnet-4-20250514", max_tokens=8000,
+        model="claude-sonnet-4-5", max_tokens=8000,
         messages=[{"role": "user", "content": prompt}])
     return safe_json_parse(next((getattr(b,"text","") for b in msg.content if hasattr(b,"text")),"").strip())
 
@@ -469,7 +471,7 @@ INVOICE TEXT:
 Return ONLY the JSON object."""
     try:
         msg = get_claude().messages.create(
-            model="claude-sonnet-4-20250514", max_tokens=200,
+            model="claude-sonnet-4-5", max_tokens=200,
             messages=[{"role": "user", "content": prompt}])
         raw = next((getattr(b,"text","") for b in msg.content if hasattr(b,"text")),"").strip()
         raw = re.sub(r'^```(?:json)?', '', raw).rstrip('`').strip()
@@ -1575,6 +1577,16 @@ def list_projects():
     if not PROJECTS.exists(): return []
     return sorted([d.name for d in PROJECTS.iterdir() if d.is_dir() and not d.name.startswith("_")])
 
+@app.put("/projects/{project}/meta")
+def update_project_meta(project: str, body: dict):
+    """Update project metadata: gsf, state, building_type, architect, completed"""
+    meta = load_meta(project)
+    for field in ["gsf", "state", "building_type", "architect", "completed"]:
+        if field in body:
+            meta[field] = body[field]
+    save_meta(project, meta)
+    return {"status": "ok", "meta": meta}
+
 @app.post("/projects/{project}/create")
 def create_project(project: str, body: dict | None = None):
     (PROJECTS/project).mkdir(parents=True, exist_ok=True)
@@ -1584,6 +1596,7 @@ def create_project(project: str, body: dict | None = None):
         meta["gsf"]           = body.get("gsf", 0)
         meta["state"]         = body.get("state", "")
         meta["building_type"] = body.get("building_type", "")
+        meta["architect"]     = body.get("architect", "")
         meta["project_name"]  = body.get("project_name", project)
         save_meta(project, meta)
     return {"status": "created", "project": project}
@@ -1597,9 +1610,64 @@ def project_status(project: str):
 
 @app.delete("/projects/{project}")
 def delete_project(project: str):
-    p=PROJECTS/project
-    if p.exists(): shutil.rmtree(p)
-    return {"status":"deleted"}
+    import stat, os, time
+    p = PROJECTS / project
+    if not p.exists():
+        return {"status": "deleted", "message": "Project not found (already deleted)"}
+
+    def _force_chmod(path, exc_info):
+        """onerror handler: make file writable then retry remove."""
+        try:
+            os.chmod(path, stat.S_IWRITE)
+            os.remove(path)
+        except Exception:
+            pass
+
+    # ── Step 1: Rename the folder first ──────────────────────────────────────
+    # OneDrive holds locks on files inside a synced folder by name.
+    # Renaming the folder causes OneDrive to release those file locks,
+    # which then allows us to delete the renamed folder successfully.
+    tmp_name = f"_deleting_{project}_{int(time.time())}"
+    tmp_p    = PROJECTS / tmp_name
+    try:
+        p.rename(tmp_p)
+    except Exception:
+        tmp_p = p   # rename failed — proceed with original path anyway
+
+    # ── Step 2: Delete the (renamed) folder ──────────────────────────────────
+    target = tmp_p
+    try:
+        shutil.rmtree(str(target), onerror=_force_chmod)
+    except Exception:
+        pass
+
+    # If rmtree still left something behind, walk and delete individually
+    if target.exists():
+        try:
+            for root, dirs, files in os.walk(str(target), topdown=False):
+                for f in files:
+                    fp = os.path.join(root, f)
+                    try:
+                        os.chmod(fp, stat.S_IWRITE)
+                        os.remove(fp)
+                    except Exception:
+                        pass
+                for d in dirs:
+                    try: os.rmdir(os.path.join(root, d))
+                    except Exception: pass
+            try: os.rmdir(str(target))
+            except Exception: pass
+        except Exception:
+            pass
+
+    # ── Step 3: Verify it is actually gone ────────────────────────────────────
+    # Also check that the original path is gone (covers the rename-failed case)
+    if target.exists() or p.exists():
+        raise HTTPException(500,
+            f"Could not fully delete project '{project}'. "
+            f"Please close any open Excel files, pause OneDrive sync, and try again.")
+
+    return {"status": "deleted", "message": f"Project '{project}' deleted"}
 
 @app.delete("/projects/{project}/po")
 def delete_po(project: str):
@@ -1727,23 +1795,20 @@ async def upload_po(project: str, file: UploadFile = File(...),
         it["po_category"] = po_category   # tag which PO this came from
         new_items.append(normalize_item(it))
 
-    # Load existing items and handle category
+    # Load existing items
     existing = load_items(project)
+    src_filename = file.filename
 
-    # CLEAR all existing items from this category first, then add ALL new items.
-    # This ensures:
-    #   1. Re-uploading same PO doesn't duplicate anything (cleared first)
-    #   2. Same material appearing 2× in one PO BOTH get added (no dedup within upload)
-    if po_category == "lumber":
-        # Keep items from other categories (housewrap, siding)
-        # Remove items tagged as lumber OR untagged legacy items
-        existing = [it for it in existing
-                    if it.get("po_category") in ("housewrap","siding")]
-    else:
-        # Keep everything except this specific category
-        existing = [it for it in existing if it.get("po_category") != po_category]
+    # ADDITIVE UPLOAD: Only clear items from the SAME source file (same filename).
+    # Items from OTHER PO files (even in same category) are PRESERVED.
+    # This allows: Lumber PO + LVL PO + Each PO to all coexist.
+    # Re-uploading the same file replaces only that file's items.
+    existing = [it for it in existing if it.get("po_file_src","") != src_filename]
 
-    # Add ALL new items — no deduplication within a single PO upload
+    # Tag each new item with its source filename
+    for item in new_items:
+        item["po_file_src"] = src_filename
+
     for item in new_items:
         existing.append(item)
     added = len(new_items); skipped = 0
@@ -2439,32 +2504,51 @@ def delete_item(project: str, item_idx: int):
 @app.patch("/projects/{project}/items/{item_idx}/delivery")
 def edit_delivery(project: str, item_idx: int, body: dict):
     """Edit the delivered quantity for a specific invoice on an item.
-    body: {invoice_no: str, qty: number}
-    qty is stored as LF for LVL/R/L Lumber, pieces for everything else.
+    body: {invoice_no: str, qty: number, unit: "LF"|"PC"|"BF"|"SF"}
+    - For LF unit (LVL, R/L Lumber): qty is stored as LF directly
+    - For PC unit: qty is stored as pieces (converted to LF via item dimensions)
     Setting qty to 0 removes that invoice entry.
     """
     items = load_items(project)
     if item_idx < 0 or item_idx >= len(items):
         raise HTTPException(404, "Item not found.")
     item = items[item_idx]
-    inv_no = str(body.get("invoice_no", "")).strip()
+    inv_no  = str(body.get("invoice_no", "")).strip()
     new_qty = n(body.get("qty", 0))
+    unit    = str(body.get("unit", "")).upper()
     if not inv_no:
         raise HTTPException(400, "invoice_no is required.")
+
+    typ = item.get("type", "")
+    is_lf_item = (typ in ("Lumber", "LVL") or is_rl_lumber(item))
+
+    # Convert to the correct storage unit
+    # If user selected LF explicitly → store as LF
+    # If user selected PC for an LF item → convert to LF via item length
+    if unit == "LF" and is_lf_item:
+        store_qty = round(new_qty, 4)        # already LF
+    elif unit == "PC" and is_lf_item:
+        # Convert pieces to LF: LF = pieces × length
+        lv = n(item.get("length_num", 0))
+        store_qty = round(new_qty * lv, 4) if lv else round(new_qty, 4)
+    else:
+        # PC-based item: store as pieces
+        store_qty = round(new_qty, 4)
+
     deliveries = item.setdefault("deliveries", {})
     old_qty = n(deliveries.get(inv_no, 0))
     if new_qty == 0:
         deliveries.pop(inv_no, None)
     else:
-        deliveries[inv_no] = round(new_qty, 4)
+        deliveries[inv_no] = store_qty
+
     save_items(project, items)
     try: rebuild_excel(project)
     except Exception as e: print(f"[WARN] rebuild after delivery edit: {e}")
-    typ  = item.get("type","")
-    unit = "LF" if typ in ("Lumber","LVL") else "PC"
+    display_unit = "LF" if is_lf_item else "PC"
     return {"status": "ok",
-            "message": f"Delivery for {inv_no} updated: {old_qty:.2f} → {new_qty:.2f} {unit}",
-            "item_idx": item_idx, "invoice_no": inv_no, "qty": new_qty}
+            "message": f"Delivery for {inv_no} updated: {old_qty:.4f} → {store_qty:.4f} {display_unit}",
+            "item_idx": item_idx, "invoice_no": inv_no, "qty": store_qty}
 
 
 @app.patch("/projects/{project}/items/{item_idx}/leftover")
@@ -2688,29 +2772,42 @@ def download_schedule_excel(project: str):
     # Try V2 first
     v2 = load_sched_v2(project)
     if v2 and v2.get("activities"):
-        # Adapt V2 to legacy field names for the Excel writer below
+        # Build relationship maps for predecessor/successor display
+        rels = v2.get("relationships", [])
+        pred_map = {}  # act_id → list of pred_ids
+        succ_map = {}  # act_id → list of succ_ids
+        for r in rels:
+            pred_map.setdefault(r.get("succ_id",""), []).append(r.get("pred_id",""))
+            succ_map.setdefault(r.get("pred_id",""), []).append(r.get("succ_id",""))
+
         acts = []
-        for a in v2["activities"]:
+        for a in sorted(v2["activities"],
+                        key=lambda x: (x.get("bldg_seq",9999), x.get("seq_no",9999))):
             acts.append({
                 "id":             a.get("id",""),
+                "p6_code":        a.get("p6_code","") or a.get("id",""),
                 "name":           a.get("name",""),
                 "building":       a.get("wbs",""),
                 "level":          a.get("level",""),
-                "activity_type":  a.get("cost_code",""),
+                "seq_no":         a.get("seq_no",""),
+                "bldg_seq":       a.get("bldg_seq",""),
+                "activity_type":  a.get("cost_code","") or a.get("activity_type",""),
                 "duration":       a.get("duration",0),
-                "planned_start":  a.get("start",""),
-                "planned_finish": a.get("finish",""),
+                "planned_start":  a.get("start","") or a.get("planned_start",""),
+                "planned_finish": a.get("finish","") or a.get("planned_finish",""),
                 "baseline_start": a.get("baseline_start",""),
                 "baseline_finish":a.get("baseline_finish",""),
                 "actual_start":   a.get("actual_start",""),
                 "actual_finish":  a.get("actual_finish",""),
                 "pct_complete":   a.get("pct_complete",0),
                 "status":         a.get("status","Not Started"),
+                "critical":       a.get("critical", False),
                 "builder_cost":   a.get("builder_cost",0),
                 "client_price":   a.get("client_price",0),
-                "profit":         (a.get("client_price",0) - a.get("builder_cost",0)),
+                "profit":         round((a.get("client_price",0) - a.get("builder_cost",0)), 2),
                 "notes":          a.get("notes",""),
-                "predecessor_ids":[r["pred_id"] for r in v2.get("relationships",[]) if r.get("succ_id")==a.get("id")],
+                "predecessor_ids": pred_map.get(a.get("id",""), []),
+                "successor_ids":   succ_map.get(a.get("id",""), []),
             })
         data = {"activities": acts, "project_name": project}
     else:
@@ -2734,17 +2831,17 @@ def download_schedule_excel(project: str):
     hfont = _F(bold=True,color="FFFFFF",name="Arial",size=10)
     
     # Title
-    ws.merge_cells("A1:V1")
+    ws.merge_cells("A1:X1")
     tc = ws.cell(row=1,column=1,value=f"PROJECT SCHEDULE — {proj_name}")
     tc.font=_F(bold=True,name="Arial",size=14,color="FFFFFF"); tc.fill=hfill
     tc.alignment=_A(horizontal="center",vertical="center"); ws.row_dimensions[1].height=30
     
-    hdrs=["Activity ID","Activity Name","Building","Level","Activity Type",
+    hdrs=["Seq","Activity ID","Activity Name","Building","Level","Activity Type",
           "Duration (Days)","Planned Start","Planned Finish",
           "Baseline Start","Baseline Finish","Actual Start","Actual Finish",
           "% Complete","Float (Days)","Status",
           "Builder Cost","Client Price","Profit","Profit %",
-          "Predecessor IDs","Material Types","Notes"]
+          "Predecessor IDs","Successor IDs","Material Types","Notes"]
     ws.row_dimensions[2].height=36
     for ci,h in enumerate(hdrs,1):
         c=ws.cell(row=2,column=ci,value=h)
@@ -2762,7 +2859,6 @@ def download_schedule_excel(project: str):
         fill=_PF("solid",start_color=bg)
         ps=act.get("planned_start",""); pf=act.get("planned_finish","")
         bs=act.get("baseline_start",""); bf=act.get("baseline_finish","")
-        # Float = baseline_finish - planned_finish (in days)
         float_days=""
         try:
             from datetime import datetime as _dt
@@ -2772,7 +2868,8 @@ def download_schedule_excel(project: str):
         except: pass
         
         profit_pct=act.get("profit",0)/act.get("client_price",1) if act.get("client_price") else 0
-        vals=[act.get("id",""),act.get("name",""),act.get("building",""),act.get("level",""),
+        vals=[act.get("seq_no",""),
+              act.get("id",""),act.get("name",""),act.get("building",""),act.get("level",""),
               act.get("activity_type",""),act.get("duration",0),
               ps[:10] if ps else "",pf[:10] if pf else "",
               bs[:10] if bs else "",bf[:10] if bf else "",
@@ -2780,14 +2877,16 @@ def download_schedule_excel(project: str):
               act.get("actual_finish","")[:10] if act.get("actual_finish") else "",
               act.get("pct_complete",0)/100,float_days,act.get("status",""),
               act.get("builder_cost",0),act.get("client_price",0),act.get("profit",0),
-              profit_pct,", ".join(act.get("predecessor_ids",[])),
+              profit_pct,
+              ", ".join(act.get("predecessor_ids",[])),
+              ", ".join(act.get("successor_ids",[])),
               ", ".join(act.get("material_types",[])),act.get("notes","")]
-        fmts=[None,None,None,None,None,"0",
+        fmts=["0",None,None,None,None,None,"0",
               "MM/DD/YYYY","MM/DD/YYYY","MM/DD/YYYY","MM/DD/YYYY","MM/DD/YYYY","MM/DD/YYYY",
-              "0%","0",None,'"$"#,##0.00','"$"#,##0.00','"$"#,##0.00',"0.0%",None,None,None]
-        aligns=["center","left","left","center","left","center",
+              "0%","0",None,'"$"#,##0.00','"$"#,##0.00','"$"#,##0.00',"0.0%",None,None,None,None]
+        aligns=["center","center","left","left","center","left","center",
                 "center","center","center","center","center","center",
-                "center","center","center","right","right","right","center","left","left","left"]
+                "center","center","center","right","right","right","center","left","left","left","left"]
         for ci,(val,fmt,ha) in enumerate(zip(vals,fmts,aligns),1):
             c=ws.cell(row=row,column=ci,value=val)
             c.font=_F(name="Arial",size=9); c.fill=fill; c.border=bdr
@@ -2798,20 +2897,23 @@ def download_schedule_excel(project: str):
     # Grand total row
     if row>3:
         gtf=_PF("solid",start_color="1B3A5C"); gtft=_F(bold=True,color="FFFFFF",name="Arial",size=10)
-        for ci in range(1,23):
+        for ci in range(1,25):
             c=ws.cell(row=row,column=ci); c.fill=gtf; c.font=gtft; c.border=bdr
-            c.alignment=_A(horizontal="center" if ci!=2 else "left",vertical="center")
-        ws.cell(row=row,column=2,value="GRAND TOTAL")
-        ws.cell(row=row,column=16,value=f"=SUM(P3:P{row-1})").number_format='"$"#,##0.00'
+            c.alignment=_A(horizontal="center" if ci!=3 else "left",vertical="center")
+        ws.cell(row=row,column=3,value="GRAND TOTAL")
         ws.cell(row=row,column=17,value=f"=SUM(Q3:Q{row-1})").number_format='"$"#,##0.00'
         ws.cell(row=row,column=18,value=f"=SUM(R3:R{row-1})").number_format='"$"#,##0.00'
-        ws.cell(row=row,column=19,value=f"=R{row}/Q{row}").number_format="0.0%"
-        for ci in (16,17,18,19):
+        ws.cell(row=row,column=19,value=f"=SUM(S3:S{row-1})").number_format='"$"#,##0.00'
+        ws.cell(row=row,column=20,value=f"=S{row}/R{row}").number_format="0.0%"
+        for ci in (17,18,19,20):
             ws.cell(row=row,column=ci).fill=gtf; ws.cell(row=row,column=ci).font=gtft
     
-    col_w=[12,40,22,7,26,9,13,13,13,13,13,13,11,10,14,14,14,12,10,16,18,24]
+    # col widths: Seq, ID, Name, Building, Level, Type, Dur, PlnSt, PlnFin,
+    #             BlSt, BlFin, ActSt, ActFin, Pct, Float, Status,
+    #             BldCost, CliPrice, Profit, Profit%, Preds, Succs, MatTypes, Notes
+    col_w=[6,12,40,22,7,26,9,13,13,13,13,13,13,11,10,14,14,14,12,10,18,18,18,24]
     for ci,w in enumerate(col_w,1): ws.column_dimensions[_gcl(ci)].width=w  # type: ignore[assignment]
-    ws.freeze_panes="C3"
+    ws.freeze_panes="D3"  # freeze Seq+ID+Name columns
     
     out=BASE_DIR/f"schedule_{project.replace(' ','_')}_export.xlsx"
     wb.save(str(out))
@@ -3237,6 +3339,7 @@ def estimate_materials(body: dict):
     target_gsf   = n(body.get("gsf", 0))
     target_state = body.get("state", "").strip().upper()
     target_btype = body.get("building_type", "").strip().upper()
+    target_arch  = body.get("architect", "").strip().upper()
 
     if not target_gsf:
         raise HTTPException(400, "GSF is required.")
@@ -3279,9 +3382,11 @@ def estimate_materials(body: dict):
         p_gsf   = _get_project_gsf(proj, items_p, meta)
         p_state = meta.get("state", "").strip().upper()
         p_btype = meta.get("building_type", "").strip().upper()
+        p_arch  = meta.get("architect", "").strip().upper()
         state_ok = (not target_state) or (not p_state) or (p_state == target_state)
         btype_ok = (not target_btype) or (not p_btype) or (p_btype == target_btype)
-        if state_ok and btype_ok:
+        arch_ok  = (not target_arch) or (target_arch in p_arch) or (p_arch in target_arch)
+        if state_ok and btype_ok and arch_ok:
             matching.append((proj, p_gsf, items_p, meta))
 
     fallback_used = False
@@ -3398,6 +3503,7 @@ def estimate_materials(body: dict):
         "project_names": proj_names,
         "state":         target_state,
         "building_type": target_btype,
+        "architect":     target_arch,
         "fallback_used": fallback_used,
         "warning":       ("⚠ No completed projects found — using active projects with delivery data. "
                           "Mark projects complete for more accurate estimates.") if fallback_used else "",
@@ -3407,14 +3513,14 @@ def estimate_materials(body: dict):
 
 
 @app.get("/estimate-materials/excel")
-def estimate_excel(gsf: float = 0, state: str = "", building_type: str = ""):
+def estimate_excel(gsf: float = 0, state: str = "", building_type: str = "", architect: str = ""):
     """Download GSF estimate as Excel."""
     from fastapi import Query
-    body = {"gsf": gsf, "state": state, "building_type": building_type}
     # Re-use the estimate logic
     target_gsf   = n(gsf)
     target_state = state.strip().upper()
     target_btype = building_type.strip().upper()
+    target_arch  = architect.strip().upper()
     if not target_gsf:
         raise HTTPException(400, "GSF is required.")
 
@@ -3425,9 +3531,11 @@ def estimate_excel(gsf: float = 0, state: str = "", building_type: str = ""):
         if p_gsf == 0: continue
         p_state = meta.get("state","").strip().upper()
         p_btype = meta.get("building_type","").strip().upper()
+        p_arch  = meta.get("architect","").strip().upper()
         state_ok = (not target_state) or (not p_state) or (p_state == target_state)
         btype_ok = (not target_btype) or (not p_btype) or (p_btype == target_btype)
-        if state_ok and btype_ok:
+        arch_ok  = (not target_arch) or (target_arch in p_arch) or (p_arch in target_arch)
+        if state_ok and btype_ok and arch_ok:
             matching.append((proj, p_gsf, load_items(proj)))
 
     from collections import defaultdict
@@ -4182,7 +4290,7 @@ async def upload_labor(project: str, file: UploadFile = File(...),
     ) + full_text + "\n\nReturn ONLY the JSON array."
 
     msg = get_claude().messages.create(
-        model="claude-sonnet-4-20250514", max_tokens=8000,
+        model="claude-sonnet-4-5", max_tokens=8000,
         messages=[{"role": "user", "content": prompt}])
     rows = safe_json_parse(next((getattr(b,"text","") for b in msg.content if hasattr(b,"text")),"").strip())
 
@@ -6074,6 +6182,10 @@ def _cpm_forward_pass(data: dict, calendar: dict | None = None, pinned_id: str |
             a["start"]  = new_start  or a.get("start","")
             a["finish"] = new_finish or a.get("finish","")
             changes += 1
+    # Sync planned_start/finish = start/finish after every CPM run
+    for a in acts:
+        if a.get("start"):  a["planned_start"]  = a["start"]
+        if a.get("finish"): a["planned_finish"] = a["finish"]
     return changes
 
 def _duration_from_hours(hrs: float) -> int:
@@ -6837,7 +6949,14 @@ def get_schedule_v2(project: str):
     if needs_save:
         save_sched_v2(project, data)
 
-    # Sort activities by (bldg_seq, seq_no) — P6 default display order
+    # Sync planned_start/finish = start/finish before returning
+    for a in data.get("activities", []):
+        s = a.get("start","") or a.get("planned_start","")
+        f = a.get("finish","") or a.get("planned_finish","")
+        if s: a["start"]=s; a["planned_start"]=s
+        if f: a["finish"]=f; a["planned_finish"]=f
+
+    # Sort activities by (bldg_seq, seq_no)
     data["activities"] = sorted(data.get("activities", []),
         key=lambda a: (a.get("bldg_seq", 9999), a.get("seq_no", 9999)))
 
@@ -6901,6 +7020,25 @@ def get_schedule_v2(project: str):
 
     return {"schedule": data, "baselines": bls, "active_baseline": active_bl,
             "subtotals": subtotals, "grand_total": grand}
+
+@app.put("/projects/{project}/schedule/v2")
+def put_schedule_v2(project: str, body: dict):
+    """Full schedule save — used by drag-to-reorder to persist seq_no changes
+    and updated predecessor/successor relationships in one atomic write."""
+    data = load_sched_v2(project)
+    # Accept updated activities (seq_no) and relationships from the body
+    if "activities" in body:
+        incoming = {a["id"]: a for a in body["activities"]}
+        for act in data.get("activities", []):
+            if act["id"] in incoming:
+                src = incoming[act["id"]]
+                # Only update fields that the reorder operation changes
+                if "seq_no"   in src: act["seq_no"]   = src["seq_no"]
+                if "bldg_seq" in src: act["bldg_seq"] = src["bldg_seq"]
+    if "relationships" in body:
+        data["relationships"] = body["relationships"]
+    save_sched_v2(project, data)
+    return {"status": "ok"}
 
 @app.post("/projects/{project}/schedule/activity")
 def add_activity(project: str, body: dict):
@@ -6978,6 +7116,9 @@ def update_activity(project: str, act_id: str, body: dict):
                     a["finish"] = _add_workdays_cal(a["start"], int(a.get("duration",1)) - 1, _cal)
             except Exception: pass
 
+            # Sync planned dates
+            if a.get("start"):  a["planned_start"]  = a["start"]
+            if a.get("finish"): a["planned_finish"] = a["finish"]
             # Auto status from actuals
             if a.get("actual_finish"): a["status"] = "Complete"; a["pct_complete"] = 100
             elif a.get("actual_start") and a.get("status") not in ("Complete","Completed"):
