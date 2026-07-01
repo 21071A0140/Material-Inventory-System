@@ -3,6 +3,7 @@ Material Inventory Automation System - v5
 Complete rebuild: CO fix, invoice unmatched handling, leftover tracking,
 summary sheets, per-project + all-projects excel, UI editing, graphs page,
 total cost with tax in top bar.
+PostgreSQL-backed storage (db.py) — replaces all JSON file I/O.
 """
 import os, json, re, shutil
 from pathlib import Path
@@ -11,7 +12,8 @@ from datetime import datetime
 # ── API Key ───────────────────────────────────────────────────────────────────
 import os
 
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+os.environ["ANTHROPIC_API_KEY"] = ANTHROPIC_API_KEY
 
 import pdfplumber
 import openpyxl
@@ -32,18 +34,19 @@ except ImportError:
     pd = None
 
 BASE_DIR   = Path(__file__).parent
+# PROJECTS dir kept for Excel/PDF temp files only (generated on-demand, not stored)
 PROJECTS   = BASE_DIR / "projects"
 import tempfile as _tmp_s
 UPLOAD_DIR = Path(_tmp_s.gettempdir()) / "matinv_uploads"
 PROJECTS.mkdir(exist_ok=True)
 UPLOAD_DIR.mkdir(exist_ok=True)
 
+# ── Postgres storage layer ────────────────────────────────────────────────────
+import db as _db
+_db.init_db()   # creates tables if they don't exist yet (idempotent)
+
 app = FastAPI(title="Material Inventory Automation v5")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-
-@app.get("/")
-def home():
-    return FileResponse(BASE_DIR / "index.html")
 
 _claude = None
 def get_claude():
@@ -482,25 +485,24 @@ Return ONLY the JSON object."""
 
 
 # ── Data helpers ──────────────────────────────────────────────────────────────
-def project_xlsx(project):  return PROJECTS / project / "inventory.xlsx"
+def project_xlsx(project):    return PROJECTS / project / "inventory.xlsx"
 def project_po_xlsx(project): return PROJECTS / project / "po_report.xlsx"
 def project_co_xlsx(project): return PROJECTS / project / "co_report.xlsx"
-def project_meta(project):  return PROJECTS / project / "meta.json"
+def project_meta(project):    return PROJECTS / project / "meta.json"
 
+# ── Storage: all JSON data goes through db.py (Postgres) ─────────────────────
 def load_meta(project):
-    p = project_meta(project)
-    return json.loads(p.read_text()) if p.exists() else \
+    return _db.load_meta(project) or \
            {"invoices": [], "co_count": 0, "change_orders": [], "unmatched_items": []}
 
 def save_meta(project, meta):
-    project_meta(project).write_text(json.dumps(meta, indent=2))
+    _db.save_meta(project, meta)
 
 def load_items(project):
-    p = PROJECTS / project / "items.json"
-    return json.loads(p.read_text()) if p.exists() else []
+    return _db.load_items(project) or []
 
 def save_items(project, items):
-    (PROJECTS / project / "items.json").write_text(json.dumps(items, indent=2))
+    _db.save_items(project, items)
 
 def normalize_item(it):
     it.setdefault("t_num", 0.0)
@@ -1469,7 +1471,7 @@ def _build_co_excel(project, meta):
 def build_summary_excel():
     """Build cross-project summary Excel."""
     C = get_column_letter
-    projects = [d.name for d in PROJECTS.iterdir() if d.is_dir() and not d.name.startswith("_")] if PROJECTS.exists() else []
+    projects = _db.list_projects()
     wb = openpyxl.Workbook()
     ws = wb.active
     assert ws is not None  # type: ignore
@@ -1572,10 +1574,27 @@ def build_summary_excel():
 
 
 # ── API Routes ────────────────────────────────────────────────────────────────
+@app.get("/projects/poll")
+def poll_projects(since: str = ""):
+    """
+    Lightweight endpoint for the frontend's background sync.
+    Returns the last-updated timestamp for every project (or one project).
+    The frontend calls this every 15 seconds and only calls silentRefresh()
+    if the timestamp for the current project has advanced since last check.
+    This means: 1 tiny DB query every 15s per browser tab — no wasted work.
+    """
+    timestamps = _db.all_projects_last_updated()
+    return {"timestamps": timestamps, "server_time": datetime.utcnow().isoformat()}
+
+@app.get("/projects/{project}/poll")
+def poll_single_project(project: str):
+    """Poll a single project's last-updated time."""
+    ts = _db.project_last_updated(project)
+    return {"project": project, "last_updated": ts, "server_time": datetime.utcnow().isoformat()}
+
 @app.get("/projects")
 def list_projects():
-    if not PROJECTS.exists(): return []
-    return sorted([d.name for d in PROJECTS.iterdir() if d.is_dir() and not d.name.startswith("_")])
+    return sorted(_db.list_projects())
 
 @app.put("/projects/{project}/meta")
 def update_project_meta(project: str, body: dict):
@@ -1589,8 +1608,7 @@ def update_project_meta(project: str, body: dict):
 
 @app.post("/projects/{project}/create")
 def create_project(project: str, body: dict | None = None):
-    (PROJECTS/project).mkdir(parents=True, exist_ok=True)
-    # Store project metadata if provided
+    _db.create_project(project)
     if body:
         meta = load_meta(project)
         meta["gsf"]           = body.get("gsf", 0)
@@ -1606,67 +1624,13 @@ def project_status(project: str):
     items=load_items(project); meta=load_meta(project)
     return {"project":project,"has_po":len(items)>0,"item_count":len(items),
             "invoice_count":len(meta.get("invoices",[])),"co_count":meta.get("co_count",0),
-            "has_excel":project_xlsx(project).exists(),"invoices":meta.get("invoices",[])}
+            "has_excel":len(items)>0,"invoices":meta.get("invoices",[])}
 
 @app.delete("/projects/{project}")
 def delete_project(project: str):
-    import stat, os, time
-    p = PROJECTS / project
-    if not p.exists():
+    if not _db.project_exists(project):
         return {"status": "deleted", "message": "Project not found (already deleted)"}
-
-    def _force_chmod(path, exc_info):
-        """onerror handler: make file writable then retry remove."""
-        try:
-            os.chmod(path, stat.S_IWRITE)
-            os.remove(path)
-        except Exception:
-            pass
-
-    # ── Step 1: Rename the folder first ──────────────────────────────────────
-    # OneDrive holds locks on files inside a synced folder by name.
-    # Renaming the folder causes OneDrive to release those file locks,
-    # which then allows us to delete the renamed folder successfully.
-    tmp_name = f"_deleting_{project}_{int(time.time())}"
-    tmp_p    = PROJECTS / tmp_name
-    try:
-        p.rename(tmp_p)
-    except Exception:
-        tmp_p = p   # rename failed — proceed with original path anyway
-
-    # ── Step 2: Delete the (renamed) folder ──────────────────────────────────
-    target = tmp_p
-    try:
-        shutil.rmtree(str(target), onerror=_force_chmod)
-    except Exception:
-        pass
-
-    # If rmtree still left something behind, walk and delete individually
-    if target.exists():
-        try:
-            for root, dirs, files in os.walk(str(target), topdown=False):
-                for f in files:
-                    fp = os.path.join(root, f)
-                    try:
-                        os.chmod(fp, stat.S_IWRITE)
-                        os.remove(fp)
-                    except Exception:
-                        pass
-                for d in dirs:
-                    try: os.rmdir(os.path.join(root, d))
-                    except Exception: pass
-            try: os.rmdir(str(target))
-            except Exception: pass
-        except Exception:
-            pass
-
-    # ── Step 3: Verify it is actually gone ────────────────────────────────────
-    # Also check that the original path is gone (covers the rename-failed case)
-    if target.exists() or p.exists():
-        raise HTTPException(500,
-            f"Could not fully delete project '{project}'. "
-            f"Please close any open Excel files, pause OneDrive sync, and try again.")
-
+    _db.delete_project(project)
     return {"status": "deleted", "message": f"Project '{project}' deleted"}
 
 @app.delete("/projects/{project}/po")
@@ -1772,7 +1736,7 @@ async def upload_po(project: str, file: UploadFile = File(...),
     po_category: 'lumber' | 'housewrap' | 'siding'
     Items are deduplicated by type+description+unit_cost so re-uploading is safe.
     """
-    (PROJECTS/project).mkdir(parents=True,exist_ok=True)
+    _db.create_project(project)
     pdf_path = UPLOAD_DIR / f"{project}_PO_{po_category}_{file.filename}"
     pdf_path.write_bytes(await file.read())
 
@@ -2662,7 +2626,7 @@ def get_change_orders(project: str):
 @app.get("/all-change-orders")
 def get_all_change_orders():
     """Return CO list for ALL projects."""
-    projects = [d.name for d in PROJECTS.iterdir() if d.is_dir() and not d.name.startswith("_")] if PROJECTS.exists() else []
+    projects = _db.list_projects()
     result = {}
     for proj in sorted(projects):
         meta  = load_meta(proj)
@@ -2712,15 +2676,11 @@ def download_schedule(filename: str):
 
 
 # ── Schedule storage endpoints ────────────────────────────────────────────────
-def schedule_path(project):
-    return PROJECTS / project / "schedule.json"
-
 def load_schedule(project):
-    p = schedule_path(project)
-    return json.loads(p.read_text()) if p.exists() else {"activities":[], "generated_at":"", "project_name":"", "baseline_locked":False}
+    return _db.load_schedule(project) or {"activities":[], "generated_at":"", "project_name":"", "baseline_locked":False}
 
 def save_schedule(project, data):
-    schedule_path(project).write_text(json.dumps(data, indent=2, default=str))
+    _db.save_schedule(project, data)
 
 @app.post("/projects/{project}/schedule/generate")
 async def generate_project_schedule(project: str, body: dict):
@@ -2734,7 +2694,7 @@ async def generate_project_schedule(project: str, body: dict):
         "generated_at": datetime.now().isoformat(),
         "baseline_locked": baseline_locked,
     }
-    (PROJECTS / project).mkdir(parents=True, exist_ok=True)
+    _db.create_project(project)
     save_schedule(project, data)
     return {"status":"ok","activities":len(acts),"message":f"Schedule saved with {len(acts)} activities."}
 
@@ -2755,15 +2715,11 @@ def lock_baseline(project: str):
 
 @app.delete("/projects/{project}/schedule/delete")
 def delete_schedule(project: str):
-    """Delete the entire schedule for a project (V2 storage + legacy if present)."""
-    legacy = schedule_path(project)
-    if legacy.exists(): legacy.unlink()
-    v2 = sched_path(project)
-    if v2.exists(): v2.unlink()
-    # Also clear baselines so re-import starts fresh
-    bls = baseline_path(project)
-    if bls.exists(): bls.unlink()
-    return {"status":"ok","message":f"Schedule for '{project}' deleted."}
+    """Delete the entire schedule for a project (clears DB rows)."""
+    save_schedule(project, {"activities": [], "generated_at": "", "project_name": "", "baseline_locked": False})
+    save_sched_v2(project, {"activities": [], "relationships": [], "next_id": 1000})
+    save_baselines(project, {"baselines": [], "next_bl_id": 1})
+    return {"status": "ok", "message": f"Schedule for '{project}' deleted."}
 
 @app.get("/projects/{project}/schedule/excel")
 def download_schedule_excel(project: str):
@@ -3083,7 +3039,7 @@ async def parse_bt_estimate(
             "predecessor_ids":[],"notes":"",
         })
 
-    (PROJECTS/project).mkdir(parents=True,exist_ok=True)
+    _db.create_project(project)
     sch_data={
         "activities":acts,"project_name":project,
         "generated_at":_dt.now().isoformat(),
@@ -3226,7 +3182,7 @@ async def import_xer_schedule(project: str, file: UploadFile = File(...)):
     if not acts:
         raise HTTPException(400, "No activities found in XER file.")
 
-    (PROJECTS / project).mkdir(parents=True, exist_ok=True)
+    _db.create_project(project)
     sch_data = {
         "activities": acts,
         "project_name": project,
@@ -3254,17 +3210,31 @@ import zipfile, io, time
 
 @app.get("/backup/all")
 def backup_all_projects():
-    """Download a ZIP containing all project data (items.json + meta.json for every project)."""
-    projects = [d.name for d in PROJECTS.iterdir() if d.is_dir() and not d.name.startswith("_")] if PROJECTS.exists() else []
+    """Download a ZIP containing all project data from Postgres."""
+    projects = _db.list_projects()
     buf = io.BytesIO()
+    domain_loaders = {
+        "meta.json":        load_meta,
+        "items.json":       load_items,
+        "schedule.json":    load_schedule,
+        "schedule_v2.json": load_sched_v2,
+        "baselines.json":   load_baselines,
+        "calendar.json":    load_calendar,
+        "labor.json":       load_labor,
+        "bt_estimate.json": lambda p: _db.load_bt_estimate(p),
+        "bt_pos.json":      load_bt_pos,
+    }
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
         manifest = {"created": datetime.now().isoformat(), "projects": projects}
         zf.writestr("manifest.json", json.dumps(manifest, indent=2))
         for proj in projects:
-            for fname in ("items.json","meta.json","schedule.json"):
-                fp = PROJECTS / proj / fname
-                if fp.exists():
-                    zf.write(str(fp), f"{proj}/{fname}")
+            for fname, loader in domain_loaders.items():
+                try:
+                    data = loader(proj)
+                    if data:
+                        zf.writestr(f"{proj}/{fname}", json.dumps(data, indent=2))
+                except Exception:
+                    pass
     buf.seek(0)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     from fastapi.responses import StreamingResponse
@@ -3274,15 +3244,29 @@ def backup_all_projects():
 
 @app.get("/backup/{project}")
 def backup_single_project(project: str):
-    """Download a ZIP for a single project."""
+    """Download a ZIP for a single project from Postgres."""
+    domain_loaders = {
+        "meta.json":        load_meta,
+        "items.json":       load_items,
+        "schedule.json":    load_schedule,
+        "schedule_v2.json": load_sched_v2,
+        "baselines.json":   load_baselines,
+        "calendar.json":    load_calendar,
+        "labor.json":       load_labor,
+        "bt_estimate.json": lambda p: _db.load_bt_estimate(p),
+        "bt_pos.json":      load_bt_pos,
+    }
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
         manifest = {"created": datetime.now().isoformat(), "projects": [project]}
         zf.writestr("manifest.json", json.dumps(manifest, indent=2))
-        for fname in ("items.json","meta.json","schedule.json"):
-            fp = PROJECTS / project / fname
-            if fp.exists():
-                zf.write(str(fp), f"{project}/{fname}")
+        for fname, loader in domain_loaders.items():
+            try:
+                data = loader(project)
+                if data:
+                    zf.writestr(f"{project}/{fname}", json.dumps(data, indent=2))
+            except Exception:
+                pass
     buf.seek(0)
     safe = project.replace(" ", "_")
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -3293,30 +3277,42 @@ def backup_single_project(project: str):
 
 @app.post("/restore")
 async def restore_backup(file: UploadFile = File(...)):
-    """Restore projects from a backup ZIP. Merges — does NOT delete existing projects."""
+    """Restore projects from a backup ZIP into Postgres."""
     data = await file.read()
     restored = []; skipped = []
+    domain_savers = {
+        "meta.json":        save_meta,
+        "items.json":       save_items,
+        "schedule.json":    save_schedule,
+        "schedule_v2.json": save_sched_v2,
+        "baselines.json":   save_baselines,
+        "calendar.json":    save_calendar,
+        "labor.json":       save_labor,
+        "bt_estimate.json": save_bt_estimate,
+        "bt_pos.json":      save_bt_pos,
+    }
     with zipfile.ZipFile(io.BytesIO(data)) as zf:
         names = zf.namelist()
-        # Find all project folders inside the ZIP
         project_names = set()
         for name in names:
             parts = name.split("/")
-            if len(parts) == 2 and parts[1] in ("items.json", "meta.json"):
+            if len(parts) == 2 and parts[1] in domain_savers:
                 project_names.add(parts[0])
         for proj in project_names:
-            proj_dir = PROJECTS / proj
-            proj_dir.mkdir(parents=True, exist_ok=True)
-            for fname in ("items.json","meta.json","schedule.json"):
-                arc_key = f"{proj}/{fname}"
-                if arc_key in names:
-                    (proj_dir / fname).write_bytes(zf.read(arc_key))
-            # Rebuild the Excel after restore
             try:
-                rebuild_excel(proj)
+                _db.create_project(proj)
+                for fname, saver in domain_savers.items():
+                    arc_key = f"{proj}/{fname}"
+                    if arc_key in names:
+                        blob = json.loads(zf.read(arc_key))
+                        saver(proj, blob)
+                try:
+                    rebuild_excel(proj)
+                except Exception:
+                    pass
                 restored.append(proj)
             except Exception as e:
-                skipped.append(f"{proj} (excel error: {e})")
+                skipped.append(f"{proj} ({e})")
     return {"status": "ok", "restored": restored, "skipped": skipped,
             "message": f"Restored {len(restored)} project(s): {', '.join(restored)}"}
 
@@ -3344,7 +3340,7 @@ def estimate_materials(body: dict):
     if not target_gsf:
         raise HTTPException(400, "GSF is required.")
 
-    all_projects = [d.name for d in PROJECTS.iterdir() if d.is_dir() and not d.name.startswith("_")] if PROJECTS.exists() else []
+    all_projects = _db.list_projects()
 
     def _get_project_gsf(proj, items_p, meta):
         """Get GSF from meta or estimate from delivered LF."""
@@ -3524,7 +3520,7 @@ def estimate_excel(gsf: float = 0, state: str = "", building_type: str = "", arc
     if not target_gsf:
         raise HTTPException(400, "GSF is required.")
 
-    projects = [d.name for d in PROJECTS.iterdir() if d.is_dir() and not d.name.startswith("_")] if PROJECTS.exists() else []
+    projects = _db.list_projects()
     matching = []
     for proj in projects:
         meta  = load_meta(proj); p_gsf = n(meta.get("gsf", 0))
@@ -3600,7 +3596,7 @@ def estimate_excel(gsf: float = 0, state: str = "", building_type: str = "", arc
 @app.get("/summary")
 def get_summary():
     """Get summary data for all projects."""
-    projects=[d.name for d in PROJECTS.iterdir() if d.is_dir() and not d.name.startswith("_")] if PROJECTS.exists() else []
+    projects=_db.list_projects()
     result=[]
     for proj in sorted(projects):
         items=load_items(proj); meta=load_meta(proj)
@@ -3719,7 +3715,7 @@ def download_co_excel(project: str):
 @app.get("/download-all-projects")
 def download_all_projects_excel():
     """One Excel with All Projects Summary + one Inventory sheet per project."""
-    projects = sorted([d.name for d in PROJECTS.iterdir() if d.is_dir()]) if PROJECTS.exists() else []
+    projects = sorted(_db.list_projects())
     if not projects:
         raise HTTPException(400, "No projects found.")
     try:
@@ -4170,20 +4166,11 @@ STANDARD_SCOPES = [
     "Drywall", "Roofing", "MEP Rough", "MEP Finish", "Painting", "Other"
 ]
 
-def labor_path(project: str):
-    return PROJECTS / project / "labor.json"
-
 def load_labor(project: str):
-    p = labor_path(project)
-    if p.exists():
-        try:
-            return json.loads(p.read_text())
-        except Exception:
-            pass
-    return {"buildings": {}, "subs": [], "last_updated": "", "upload_history": []}
+    return _db.load_labor(project) or {"buildings": {}, "subs": [], "last_updated": "", "upload_history": []}
 
 def save_labor(project: str, data: dict):
-    labor_path(project).write_text(json.dumps(data, indent=2))
+    _db.save_labor(project, data)
 
 
 @app.get("/projects/{project}/labor")
@@ -4243,7 +4230,7 @@ async def upload_labor(project: str, file: UploadFile = File(...),
     source: 'bt' (BuilderTrend) or 'sage' (Sage 300)
     """
     import io, re
-    (PROJECTS / project).mkdir(parents=True, exist_ok=True)
+    _db.create_project(project)
     raw = await file.read()
 
     # Extract all sheets from the Excel
@@ -4448,25 +4435,18 @@ def get_dashboard(project: str):
 # ══════════════════════════════════════════════════════════════════════════════
 import re as _re
 
-def bt_estimate_path(project: str): return PROJECTS / project / "bt_estimate.json"
-def bt_pos_path(project: str):      return PROJECTS / project / "bt_pos.json"
-
 def load_bt_estimate(project: str):
-    p = bt_estimate_path(project)
-    if not p.exists(): return []
-    data = json.loads(p.read_text())
-    # Tolerate both shapes: a flat list of rows, OR a {"rows":[...], ...meta} wrapper
-    # (the generator stores a wrapper with labor_contract/distribution metadata).
+    data = _db.load_bt_estimate(project)
+    if not data: return []
     if isinstance(data, dict):
         return data.get("rows", [])
     return data
 
 def load_bt_pos(project: str):
-    p = bt_pos_path(project)
-    return json.loads(p.read_text()) if p.exists() else []
+    return _db.load_bt_pos(project) or []
 
-def save_bt_estimate(project: str, data): bt_estimate_path(project).write_text(json.dumps(data, indent=2))
-def save_bt_pos(project: str, data):      bt_pos_path(project).write_text(json.dumps(data, indent=2))
+def save_bt_estimate(project: str, data): _db.save_bt_estimate(project, data)
+def save_bt_pos(project: str, data):      _db.save_bt_pos(project, data)
 
 # ── Helpers ────────────────────────────────────────────────────────────────
 def _clean_cost_code(cc: str) -> str:
@@ -4598,10 +4578,15 @@ def _norm(s):
     return re.sub(r"\s+", " ", str(s or "").strip().lower())
 
 def _gbt_find_buyout(buyout, *keywords):
-    """First buyout row whose description contains ALL keywords (case-insensitive)."""
+    """First buyout row whose description contains ALL keywords (case-insensitive).
+    Hyphens are treated as optional spaces so 'sheathing - demising' matches
+    'Sheathing - Demising Plywood' and 'Sheathing Demising Plywood'."""
+    import re as _re2
+    def _nk(k): return _re2.sub(r'[\s\-]+', ' ', k.strip().lower())
+    norm_keys = [_nk(k) for k in keywords if k.strip() and k.strip() != '-']
     for b in buyout:
-        d = _norm(b["desc"])
-        if all(k in d for k in keywords):
+        d = _re2.sub(r'[\s\-]+', ' ', _norm(b["desc"]))
+        if all(k in d for k in norm_keys):
             return b
     return None
 
@@ -4610,12 +4595,13 @@ def _gbt_find_buyout(buyout, *keywords):
 # that GC+labor owner cost stays UNDER the labor contract, leaving a positive nails
 # residual in the 20-40% range. (Layout 30%, Framing 30%, then tapering down.)
 _GBT_LABOR_SCOPES = [
-    # (estimate keyword,           buyout keyword,    cost_code,                    category,        scope_label,        front_markup)
-    ("interior wall sheathing corridor", "sheathing - corridor", "103 - Sheathing - Labor", "01 - Framing", "Corridor seperation Plywood", 0.20),
-    ("interior wall sheathing stair","fire wall",      "103 - Sheathing - Labor","01 - Framing",  "Stair Plywood Sheathing", 0.20),
-    ("unit floor framing",         "floor truss - unit","106 - Floor Truss - Labor", "01 - Framing",  "Unit Floor Truss", 0.20),
-    ("corridor floor framing",     "floor truss - corridor","106 - Floor Truss - Labor","01 - Framing","Corridor Floor Truss",0.15),
-    ("roof framing",               "roof truss",      "107 - Roof Truss - Labor",   "01 - Framing",  "Roof Truss",       0.15),
+    ("corridor wall sheathing",  "sheathing - corridor",  "104 - Shear Wall - Labor", "01 - Framing", "Corridor Plywood Sheathing", 0.55),
+    ("demising wall",            "sheathing - demising",  "104 - Shear Wall - Labor", "01 - Framing", "Demising Plywood Sheathing", 0.55),
+    ("stair wall sheathing",     "sheathing - stair",     "104 - Shear Wall - Labor", "01 - Framing", "Stair Plywood Sheathing",    0.55),
+    ("unit floor framing",       "floor truss - unit",    "106 - Floor Truss - Labor","01 - Framing", "Unit Floor Truss",           0.45),
+    ("corridor floor framing",   "floor truss - corridor","106 - Floor Truss - Labor","01 - Framing", "Corridor Floor Truss",       0.40),
+    ("balcony floor framing",    "balcony",               "108 - Balcony - Labor",    "01 - Framing", "Balcony",                    0.40),
+    ("roof framing",             "roof truss",            "107 - Roof Truss - Labor", "01 - Framing", "Roof Truss",                 0.35),
 ]
 # Per-building labor priced off GSF (Layout/Framing/Hardware/Punchout) — markup defaults per sheet
 _GBT_PER_BLDG_LABOR = [
@@ -4641,18 +4627,21 @@ _GBT_FRAMING_MARKUP = 0.30
 # These are the BASE markups; the nails solver scales the whole ladder by one
 # factor so the Nails residual lands in 20-40%. Order = build sequence.
 _GBT_FRONTLOAD_LADDER = {
-    "Layout":                          0.60,   # first activity → highest
-    "Wall Framing":                    0.50,
-    "Sheathing":                       0.40,
-    "Corridor seperation Plywood Sheathing": 0.38,
-    "Stair Plywood Sheathing":         0.38,
-    "Unit Floor Truss":                0.35,
-    "Corridor Floor Truss":            0.33,
-    "Roof Truss":                      0.30,
-    "House Wrap":                      0.28,
-    "Hardware":                        0.25,
-    "Stair":                           0.25,
-    "Punchout":                        0.20,   # last activity → lowest
+    "Layout":                                    0.85,
+    "Wall Framing":                              0.75,
+    "Sheathing":                                 0.60,
+    "Corridor Plywood Sheathing":                0.55,
+    "Corridor seperation Plywood Sheathing":     0.55,
+    "Demising Plywood Sheathing":                0.55,
+    "Stair Plywood Sheathing":                   0.55,
+    "Unit Floor Truss":                          0.45,
+    "Corridor Floor Truss":                      0.40,
+    "Balcony":                                   0.40,
+    "Roof Truss":                                0.35,
+    "House Wrap":                                0.30,
+    "Hardware":                                  0.20,
+    "Stair":                                     0.20,
+    "Punchout":                                  0.05,
 }
 def _ladder_markup(scope_label, scale=1.0):
     """Front-loaded markup for a scope, scaled by the solver's factor."""
@@ -4744,7 +4733,7 @@ async def generate_bt_estimate(project: str, file: UploadFile = File(...),
                       e.g. {"101 - Layout - Labor":0.70,...}, and per-line overrides
                       keyed by exact title."""
     import io
-    (PROJECTS / project).mkdir(parents=True, exist_ok=True)
+    _db.create_project(project)
     raw = await file.read()
     try:
         wb = openpyxl.load_workbook(io.BytesIO(raw), data_only=True)
@@ -4802,18 +4791,71 @@ async def generate_bt_estimate(project: str, file: UploadFile = File(...),
     # ── Parse estimate building/level header ──
     col_meta = {}
     cur_b = ""
+
+    # ── Smart header detection ──────────────────────────────────────────────────
+    # The Estimate sheet can have either:
+    #   2-row header: Row1 = Building name, Row2 = Level (old format)
+    #   3-row header: Row1 = Building type (merged), Row2 = BLDG name (merged), Row3 = Level 1/2/3...
+    # We detect by checking whether row 3 contains level labels.
+    # Also handle merged cells: openpyxl only stores values in the top-left cell of a merge.
+    # So "Building Type I" in C1:H1 means C1 has the value, D1-H1 are None.
+    # We propagate the last seen non-None value rightward for merged building headers.
+
+    def _row_vals(r):
+        return [ws_est.cell(r, c).value for c in range(1, ws_est.max_column + 2)]
+
+    row1 = _row_vals(1)
+    row2 = _row_vals(2)
+    row3 = _row_vals(3)
+
+    # Detect if row 3 contains level labels (e.g. "Level 1", "L1", "Level 2"...)
+    def _has_levels(rv):
+        return any(rv[i] and re.search(r"level\s*\d", str(rv[i]).lower())
+                   for i in range(len(rv)))
+
+    use_3row = _has_levels(row3)
+    level_row_num = 3 if use_3row else 2
+    bldg_row_num  = 2 if use_3row else 1
+
+    # Build col_meta: for each data column, track (building_name, level_label)
+    # Propagate building name rightward across merged cells (None → carry last value)
+    cur_b = ""
+    cur_bldg_label = ""  # e.g. "BLDG 1"
     for c in range(3, ws_est.max_column + 1):
-        b = ws_est.cell(1, c).value
-        if b: cur_b = str(b).strip()
-        lvl = ws_est.cell(2, c).value
-        lvl = str(lvl).strip() if lvl else ""
-        if cur_b and lvl:
-            m = re.search(r"level\s*(\d+)", lvl.lower())
-            ln = f"L{m.group(1)}" if m else ("Roof" if "roof" in lvl.lower() else lvl)
-            col_meta[c] = (cur_b, ln)
+        b1v = ws_est.cell(1, c).value        # Building type row
+        b2v = ws_est.cell(bldg_row_num, c).value  # Building name row
+        lvv = ws_est.cell(level_row_num, c).value  # Level row
+
+        # Propagate building type (handles C1:H1 merge)
+        if b1v: cur_b = str(b1v).strip()
+        # Propagate building name/label (handles C2:H2 merge)
+        if b2v: cur_bldg_label = str(b2v).strip()
+
+        lvl = str(lvv).strip() if lvv else ""
+        if not lvl:
+            continue  # column has no level label — skip
+
+        # Normalize level: "Level 1" → "L1", "Roof" → "Roof", "BLDG 1" if only 1 col
+        m = re.search(r"level\s*(\d+)", lvl.lower())
+        if m:
+            ln = f"L{m.group(1)}"
+        elif "roof" in lvl.lower():
+            ln = "Roof"
+        else:
+            # Could be a plain building column (no level breakdown) — use as-is
+            ln = lvl
+
+        # Building display name: prefer "Building I" style from "Building Type I"
+        bld_display = re.sub(r"building type\s*", "Building ", cur_b, flags=re.I).strip()
+        if not bld_display:
+            bld_display = cur_bldg_label or "Building I"
+
+        col_meta[c] = (bld_display, ln)
 
     def _bld_short(b):
-        return re.sub(r"building type", "Building", b, flags=re.I).strip()
+        # Already normalized in col_meta — just return as-is
+        # (handles "Building I", "Building VA (North)" etc.)
+        return str(b).strip()
 
     # ── Parse estimate scope rows + find the GSF row ──
     # Layout / Framing / Hardware / Punchout all use the per-floor GSF (a dedicated
@@ -4910,37 +4952,45 @@ async def generate_bt_estimate(project: str, file: UploadFile = File(...),
                             "is_gc":False,"is_nails":False,"scope":scope_label,
                             "qty_cell":gsf_cell_by_bl.get((bld,lvl))})
 
-    # scope-mapped labor that uses its OWN estimate-row quantity:
-    #   Sheathing corridor/stair (÷32 sheets @ $10), Floor Truss (L2/L3), Roof Truss.
-    #   Markups match the manual sheet: Sheathing 20%, Floor Truss 20% then 15%, Roof Truss 15%.
+    # scope-mapped labor using its OWN estimate-row quantity (not GSF).
+    # Sheathing panels: divide SF by 32 (4×8 sheet = 32 SF).
+    # Buyout rates for these are per Sheet (plywood) or per SF (floor truss).
     _SCOPE_OWN_QTY = [
-        ("interior wall sheathing corridor", "sheathing - corridor", "103 - Sheathing - Labor", "Corridor seperation Plywood Sheathing", 0.20, 32),
-        ("interior wall sheathing stair",    "fire wall",            "103 - Sheathing - Labor", "Stair Plywood Sheathing",               0.20, 32),
-        ("unit floor framing",               "floor truss - unit",    "106 - Floor Truss - Labor","Unit Floor Truss",                     0.20, 1),
-        ("corridor floor framing",           "floor truss - corridor","106 - Floor Truss - Labor","Corridor Floor Truss",                 0.15, 1),
-        # Roof Truss = ONLY the wood/osb roof-framing row, NOT the shingles row.
-        ("roof framing : ply wood",          "roof truss",            "107 - Roof Truss - Labor", "Roof Truss",                            0.15, 1),
+        # (estimate desc keyword,         buyout keyword,           cost_code,                   scope_label,                  default_mk, divide)
+        ("corridor wall sheathing",        "sheathing - corridor",   "104 - Shear Wall - Labor",  "Corridor Plywood Sheathing", 0.55, 32),
+        ("demising wall",                  "sheathing - demising",   "104 - Shear Wall - Labor",  "Demising Plywood Sheathing", 0.55, 32),
+        ("stair wall sheathing",           "sheathing - stair",      "104 - Shear Wall - Labor",  "Stair Plywood Sheathing",    0.55, 32),
+        ("unit floor framing",             "floor truss - unit",     "106 - Floor Truss - Labor", "Unit Floor Truss",           0.45, 1),
+        ("corridor floor framing",         "floor truss - corridor", "106 - Floor Truss - Labor", "Corridor Floor Truss",       0.40, 1),
+        ("balcony floor framing",          "balcony",                "108 - Balcony - Labor",     "Balcony",                    0.40, 1),
+        ("roof framing",                   "roof truss",             "107 - Roof Truss - Labor",  "Roof Truss",                 0.35, 1),
     ]
     for er in est_rows:
         d = _norm(er["desc"])
         for kw, bo_kw, cc, scope_label, front, divide in _SCOPE_OWN_QTY:
             if kw in d:
-                # Extra guard: roof truss must NOT match the shingles roof-framing row
                 if "roof truss" in cc.lower() and "shingle" in d:
                     continue
-                b = _gbt_find_buyout(rate_rows, *bo_kw.split())
-                if not b: b = _gbt_find_buyout(rate_rows, bo_kw)
-                if not b: break
+                # Try split search first (handles "floor truss - unit" → ["floor truss", "unit"])
+                parts = bo_kw.split(" - ")
+                b = _gbt_find_buyout(rate_rows, *parts) if len(parts) > 1 else None
+                if not b:
+                    b = _gbt_find_buyout(rate_rows, *bo_kw.split())
+                if not b:
+                    b = _gbt_find_buyout(rate_rows, bo_kw)
+                if not b:
+                    break
                 for c, q in er["qty_by_col"].items():
                     bld, lvl = col_meta[c]
-                    qty = q / divide
+                    qty = round(q / divide, 4)
+                    unit = "Sheets" if divide == 32 else (b["unit"] or er["unit"])
                     title = f"{_bld_short(bld)} {scope_label} - {lvl}"
                     mk = _markup_for(cc, title, _ladder_markup(scope_label))
                     qcell = f"{_gcl(c)}{er['row_idx']}"
                     bt_rows.append({"category":"01 - Framing","cost_code":cc,"title":title,
-                                    "cost_type":"Labor","unit_cost":b["unit_cost"],"qty":round(qty,2),
-                                    "unit":b["unit"] or er["unit"],"builder":round(b["unit_cost"]*qty,2),
-                                    "markup":mk,"is_gc":False,"is_nails":False,"scope":scope_label,
+                                    "cost_type":"Labor","unit_cost":b["unit_cost"],"qty":qty,
+                                    "unit":unit,"builder":round(b["unit_cost"]*qty,2),"markup":mk,
+                                    "is_gc":False,"is_nails":False,"scope":scope_label,
                                     "qty_cell":qcell,"qty_divide":divide})
                 break
 
@@ -5130,9 +5180,8 @@ async def generate_bt_estimate(project: str, file: UploadFile = File(...),
                        "client_price":round(r["owner"],2),"markup_pct":round(r["markup"],4),
                        "code_cat":_code_category(cc),
                        "qty_cell":r.get("qty_cell"),"qty_divide":r.get("qty_divide",1)})
-    (PROJECTS / project / "bt_estimate.json").write_text(
-        json.dumps({"rows":stored,"generated":True,"source":file.filename,
-                    "labor_contract":labor_contract,"distribution":dist}, indent=2))
+    save_bt_estimate(project, {"rows":stored,"generated":True,"source":file.filename,
+                    "labor_contract":labor_contract,"distribution":dist})
     # Save the uploaded source workbook so the download can bundle the original
     # Estimate + Buyout sheets (lets the user verify the linking).
     src_path = PROJECTS / project / "bt_gen_source.xlsx"
@@ -5226,11 +5275,10 @@ def download_generated_bt_estimate(project: str):
     out_path = PROJECTS / project / f"{proj_short}_BT_Estimate_SOV.xlsx"
 
     if not out_path.exists():
-        # Rebuild from stored JSON
-        est_p = bt_estimate_path(project)
-        if not est_p.exists():
+        # Rebuild from stored DB data
+        data = _db.load_bt_estimate(project)
+        if not data:
             raise HTTPException(404, "No generated BT Estimate found. Generate one first.")
-        data = json.loads(est_p.read_text())
         if not (isinstance(data, dict) and data.get("rows")):
             raise HTTPException(404, "No generated BT Estimate found. Generate one first.")
         rows = data["rows"]
@@ -5356,7 +5404,7 @@ def _build_bt_sov_workbook(rows, labor_contract, dist, out_path, source_path=Non
 async def upload_bt_estimate(project: str, file: UploadFile = File(...)):
     """Parse BT Estimate XLS/XLSX and store rows."""
     import io
-    (PROJECTS / project).mkdir(parents=True, exist_ok=True)
+    _db.create_project(project)
     raw = await file.read()
     ext = (file.filename or "").lower().rsplit(".", 1)[-1]
     try:
@@ -5412,9 +5460,8 @@ async def upload_bt_estimate(project: str, file: UploadFile = File(...)):
 
 @app.delete("/projects/{project}/bt-estimate")
 def delete_bt_estimate(project: str):
-    p = bt_estimate_path(project)
-    if p.exists(): p.unlink()
-    return {"status":"ok","message":"BT Estimate deleted"}
+    save_bt_estimate(project, [])
+    return {"status": "ok", "message": "BT Estimate deleted"}
 
 
 # ── Upload BT POs ─────────────────────────────────────────────────────────
@@ -5483,9 +5530,8 @@ async def upload_bt_pos_file(project: str, file: UploadFile = File(...)):
 
 @app.delete("/projects/{project}/bt-pos")
 def delete_bt_pos(project: str):
-    p = bt_pos_path(project)
-    if p.exists(): p.unlink()
-    return {"status":"ok","message":"BT POs deleted"}
+    save_bt_pos(project, [])
+    return {"status": "ok", "message": "BT POs deleted"}
 
 
 @app.put("/projects/{project}/bt-pos/{po_no}")
@@ -5870,12 +5916,12 @@ def get_bt_summary(project: str):
     mat_vpo = _tot(material_summary, "vpo_total")
 
     # Detect whether the stored estimate was machine-generated (has the download workbook)
-    _est_raw = bt_estimate_path(project)
+    _est_raw = _db.load_bt_estimate(project)
     _is_generated = False
-    if _est_raw.exists():
+    if _est_raw:
         try:
-            _d = json.loads(_est_raw.read_text())
-            _is_generated = bool(isinstance(_d, dict) and _d.get("generated"))
+            _d = _est_raw if isinstance(_est_raw, dict) else {}
+            _is_generated = bool(_d.get("generated"))
         except Exception:
             _is_generated = False
 
@@ -5940,27 +5986,17 @@ def get_bt_summary(project: str):
 from datetime import datetime, timedelta, date as _date_cls
 import json as _json
 
-def sched_path(project: str):       return PROJECTS / project / "schedule_v2.json"
-def baseline_path(project: str):    return PROJECTS / project / "baselines.json"
-def calendar_path(project: str):    return PROJECTS / project / "calendar.json"
-
 def load_sched_v2(project: str):
-    p = sched_path(project)
-    if p.exists():
-        return _json.loads(p.read_text())
-    return {"activities": [], "relationships": [], "next_id": 1000}
+    return _db.load_sched_v2(project) or {"activities": [], "relationships": [], "next_id": 1000}
 
 def save_sched_v2(project: str, data: dict):
-    sched_path(project).write_text(_json.dumps(data, indent=2))
+    _db.save_sched_v2(project, data)
 
 def load_baselines(project: str):
-    p = baseline_path(project)
-    if p.exists():
-        return _json.loads(p.read_text())
-    return {"baselines": [], "next_bl_id": 1}
+    return _db.load_baselines(project) or {"baselines": [], "next_bl_id": 1}
 
 def save_baselines(project: str, data: dict):
-    baseline_path(project).write_text(_json.dumps(data, indent=2))
+    _db.save_baselines(project, data)
 
 # ── Per-project Working Calendar ─────────────────────────────────────────────
 # Schema: {
@@ -5970,17 +6006,13 @@ def save_baselines(project: str, data: dict):
 # Mon = index 0, Sun = index 6.  Default = 6-day week (Mon-Sat working, Sun off).
 
 def load_calendar(project: str):
-    p = calendar_path(project)
-    if p.exists():
-        try: return _json.loads(p.read_text())
-        except Exception: pass
-    return {
-        "work_week": [True, True, True, True, True, True, False],  # Mon-Sat working
+    return _db.load_calendar(project) or {
+        "work_week": [True, True, True, True, True, True, False],
         "exceptions": {}
     }
 
 def save_calendar(project: str, data: dict):
-    calendar_path(project).write_text(_json.dumps(data, indent=2))
+    _db.save_calendar(project, data)
 
 def _is_working_day(date_obj, calendar: dict) -> bool:
     """Check if a datetime.date is a working day per the calendar."""
@@ -6707,7 +6739,8 @@ def get_baselines(project: str):
 @app.put("/projects/{project}/schedule/baseline/{bl_id}/lock")
 def toggle_baseline_lock(project: str, bl_id: int, body: dict):
     bls = load_baselines(project)
-    for bl in bls["baselines"]:
+    baselines_list = bls.get("baselines") if isinstance(bls, dict) else []  # type: ignore[union-attr]
+    for bl in (baselines_list or []): # pyright: ignore[reportGeneralTypeIssues]
         if bl["id"] == bl_id:
             bl["locked"] = body.get("locked", not bl.get("locked", True))
             save_baselines(project, bls)
@@ -6717,7 +6750,8 @@ def toggle_baseline_lock(project: str, bl_id: int, body: dict):
 @app.delete("/projects/{project}/schedule/baseline/{bl_id}")
 def delete_baseline(project: str, bl_id: int):
     bls = load_baselines(project)
-    bls["baselines"] = [b for b in bls["baselines"] if b["id"] != bl_id]
+    baselines_list = bls.get("baselines") if isinstance(bls, dict) else []  # type: ignore[union-attr]
+    bls["baselines"] = [b for b in (baselines_list or []) if b["id"] != bl_id] # pyright: ignore[reportGeneralTypeIssues]
     save_baselines(project, bls)
     return {"status": "ok"}
 
@@ -7253,8 +7287,7 @@ def delete_relationship(project: str, rel_id: int):
 
 @app.delete("/projects/{project}/schedule/v2")
 def clear_schedule_v2(project: str):
-    p = sched_path(project)
-    if p.exists(): p.unlink()
+    save_sched_v2(project, {"activities": [], "relationships": [], "next_id": 1000})
     return {"status": "ok", "message": "Schedule cleared"}
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -7346,8 +7379,7 @@ async def takeoff_start(
     """Step 1 - Upload drawings, kick off background scan, return session_id immediately."""
     # Note: we proceed even if _MA_OK is False — scan_drawings will report
     # the specific error in log_lines so the user sees it clearly in the UI.
-    proj_dir = PROJECTS / project
-    proj_dir.mkdir(parents=True, exist_ok=True)
+    _db.create_project(project)  # ensure project exists in DB
 
     # Save uploaded PDFs to temp dir
     tmp_dir = Path(_tempfile.mkdtemp(prefix="matinv_"))
@@ -7457,9 +7489,7 @@ async def takeoff_compute(project: str, body: dict):
         s = _takeoff_sessions.get(sid, {})
         try:
             lines, log_lines = run_recipe_from_session(s)
-            proj_dir  = PROJECTS / s.get("project", project)
-            proj_dir.mkdir(parents=True, exist_ok=True)
-            xlsx_path = proj_dir / f"material_automation_{sid}.xlsx"
+            xlsx_path = UPLOAD_DIR / f"material_automation_{sid}.xlsx"
             build_backup_excel(lines, str(xlsx_path), project_name=s.get("project", project))
             s["xlsx_path"] = str(xlsx_path)
             s["lines"]     = [_line_to_dict(l) for l in lines]
