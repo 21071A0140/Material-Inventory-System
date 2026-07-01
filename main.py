@@ -48,6 +48,14 @@ _db.init_db()   # creates tables if they don't exist yet (idempotent)
 app = FastAPI(title="Material Inventory Automation v5")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
+@app.get("/")
+def serve_index():
+    """Serve the main HTML application."""
+    html_path = BASE_DIR / "index.html"
+    if html_path.exists():
+        return FileResponse(str(html_path), media_type="text/html")
+    return {"detail": "index.html not found — make sure it is in the same folder as main.py"}
+
 _claude = None
 def get_claude():
     global _claude
