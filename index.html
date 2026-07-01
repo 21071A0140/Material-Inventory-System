@@ -908,7 +908,7 @@ tr:not(.subtotal):not(.grand):hover td{background:rgba(36,84,255,.04)}
 <div class="toast" id="toast"></div>
 
 <script>
-const API = window.location.origin;
+const API = 'http://localhost:8000';
 let currentProject = '', allItems = [], currentMeta = {}, currentFilter = 'all';
 let pendingTypeIdx = null, editingItemIdx = null, editMode = false;
 let _coPreviewData = null;
@@ -6020,11 +6020,60 @@ loadProjects().then(() => {
   try {
     const lastPage = sessionStorage.getItem('matinv_page') || 'inventory';
     if (lastPage !== 'inventory') {
-      // showPage will activate the correct tab
       showPage(lastPage);
     }
   } catch (e) {}
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INVISIBLE BACKGROUND SYNC — checks every 15 seconds if any other user
+// has changed data on the server. If yes, silently refreshes ONLY the data
+// (inventory items, meta, invoices etc.) without touching:
+//   • what page you are on
+//   • what filter/search you have active
+//   • where you have scrolled
+//   • any input field you are currently typing in
+// ═══════════════════════════════════════════════════════════════════════════
+(function startBackgroundSync() {
+  // Track the last known server timestamp per project so we only refresh
+  // when something actually changed — not on every poll tick.
+  const _knownTs = {};
+
+  async function _bgPoll() {
+    // Don't bother if no project is selected or a modal is open
+    if (!currentProject) return;
+    if (document.querySelector('.modal-bg:not(.hidden)')) return;
+
+    // Don't refresh if the user is actively typing in any input/textarea
+    const active = document.activeElement;
+    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' ||
+                   active.tagName === 'SELECT' || active.isContentEditable)) return;
+
+    try {
+      const r = await fetch(`${API}/projects/${encodeURIComponent(currentProject)}/poll`,
+                            {signal: AbortSignal.timeout(8000)});
+      if (!r.ok) return;
+      const d = await r.json();
+      const ts = d.last_updated;
+      if (!ts) return;
+
+      const prev = _knownTs[currentProject];
+      _knownTs[currentProject] = ts;
+
+      if (!prev) return;           // first poll — just record, don't refresh
+      if (ts === prev) return;     // nothing changed — do nothing
+
+      // Data changed on the server — silently pull fresh data
+      await silentRefresh();
+    } catch (e) {
+      // Network hiccup — silently ignore, try again next tick
+    }
+  }
+
+  // Run immediately once (to seed _knownTs), then every 15 seconds
+  setTimeout(_bgPoll, 3000);
+  setInterval(_bgPoll, 15000);
+})();
 </script>
 
 <!-- ═══════════════════════════════════ SCHEDULE PAGE ══════════════════════════ -->
