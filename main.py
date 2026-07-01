@@ -6740,7 +6740,7 @@ def get_baselines(project: str):
 def toggle_baseline_lock(project: str, bl_id: int, body: dict):
     bls = load_baselines(project)
     baselines_list = bls.get("baselines") if isinstance(bls, dict) else []  # type: ignore[union-attr]
-    for bl in (baselines_list or []): # pyright: ignore[reportGeneralTypeIssues]
+    for bl in (baselines_list or []):
         if bl["id"] == bl_id:
             bl["locked"] = body.get("locked", not bl.get("locked", True))
             save_baselines(project, bls)
@@ -6751,7 +6751,7 @@ def toggle_baseline_lock(project: str, bl_id: int, body: dict):
 def delete_baseline(project: str, bl_id: int):
     bls = load_baselines(project)
     baselines_list = bls.get("baselines") if isinstance(bls, dict) else []  # type: ignore[union-attr]
-    bls["baselines"] = [b for b in (baselines_list or []) if b["id"] != bl_id] # pyright: ignore[reportGeneralTypeIssues]
+    bls["baselines"] = [b for b in (baselines_list or []) if b["id"] != bl_id]
     save_baselines(project, bls)
     return {"status": "ok"}
 
